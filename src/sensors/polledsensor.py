@@ -35,6 +35,7 @@ class PolledSensor:
             self.log.error('A GPIO Zero error occurred')
             self.log.error(e)
         except Exception as e:
+            self.log.error('An generic exception error has occurred')
             self.log.error(e)
 
         return self._value

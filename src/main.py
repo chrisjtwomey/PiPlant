@@ -2,6 +2,7 @@
 
 import time
 import logging.config
+from sensors.boardstats import BoardStats
 from sensors.sensorhub import SensorHub
 from sensors.soilmoisture import SoilMoistureSensor
 
@@ -17,9 +18,11 @@ if __name__ == '__main__':
         SoilMoistureSensor(adc_channel=4, poll_interval=poll_interval),
     ]
     sh = SensorHub(poll_interval=poll_interval)
+    bs = BoardStats(poll_interval=poll_interval)
     while True:
-        for sm in sms: 
-            print(sm.value)
-        print(dict(sh))
-        
+        # for sm in sms: 
+        #     print(sm.value)
+        # print(dict(sh))
+        print(dict(bs))
+
         time.sleep(1)

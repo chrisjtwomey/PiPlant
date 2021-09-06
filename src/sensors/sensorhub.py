@@ -1,3 +1,4 @@
+import warnings
 import smbus
 import logging
 from .polledsensor import PolledSensor
@@ -42,7 +43,14 @@ class SensorHub(PolledSensor):
         self._livebody_detection = False
 
         super().__init__(poll_interval=poll_interval)
-        self.log.info("Initialized SensorHub sensor suite")
+        self._value = dict()
+
+        status, _, _ = self.status()
+
+        if status == self.BOARD_STATUS_ERROR:
+            raise ValueError("Failed to initialize SensorHub board with status: {}".format(status))
+
+        self.log.info("Initialized SensorHub board with status: {}".format(status))
 
     def getValue(self):
         log.info("Receiving SensorHub data")
@@ -126,7 +134,7 @@ class SensorHub(PolledSensor):
         elif len(errors) > 0:
             status = self.BOARD_STATUS_ERROR
 
-        self.log.info("SensorHub status: {}".format(status))
+        self.log.debug("SensorHub status: {}".format(status))
         self.log.debug("\tWarnings:\t{}".format(len(warnings)))
         self.log.debug("\tErrors:\t\t{}".format(len(errors)))
 

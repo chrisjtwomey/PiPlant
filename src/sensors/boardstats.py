@@ -1,76 +1,113 @@
-import time
+import os
 import psutil
-import logging
+from .polledsensor import PolledSensor
 from gpiozero import CPUTemperature, LoadAverage, DiskUsage, PiBoardInfo
 
-log = logging.getLogger(__name__)
 
-class BoardStats:
-    MIN_CPU_DEGC=30
-    MAX_CPU_DEGC=100
-    MIN_LOAD_AVG=0
-    MAX_LOAD_AVG=2
-    
-    def __init__(self, max_data_age_seconds=60):
-        self.__receive_time = 0
-        self.__a_receiveBuf = []
-        self.__cpu_temp = CPUTemperature(min_temp=self.MIN_CPU_DEGC, max_temp=self.MAX_CPU_DEGC)
-        self.__disk_usage = DiskUsage()
-        self.__load_avg = LoadAverage(min_load_average=self.MIN_LOAD_AVG, max_load_average=self.MAX_LOAD_AVG)
-        self.__max_data_age_seconds = max_data_age_seconds
+class BoardStats(PolledSensor):
+    MIN_CPU_DEGC = 0
+    CPU_THROTTLE_DEGC = 82
+    CPU_TEMP_LIMIT = 85
+    MAX_CPU_DEGC = 100
+    MIN_LOAD_AVG = 0
+    MAX_LOAD_AVG = 2
 
-    def read(self):
-        self.__clear_receive_buf()
-        log.info("Receiving board stats data")
+    def __init__(self, poll_interval=1):
+        self.sensor_id = "Board Statistics"
+        self._cpu = CPUTemperature(
+            min_temp=self.MIN_CPU_DEGC, max_temp=self.MAX_CPU_DEGC)
+        self._mem = MemoryUsage()
+        self._disk = DiskUsage()
+        self._load = LoadAverage(
+            min_load_average=self.MIN_LOAD_AVG, max_load_average=self.MAX_LOAD_AVG)
 
-        try:
-            
+        super().__init__(poll_interval=poll_interval)
+        self._value = dict()
+        self.log.info("Initialized Board Statistics monitor")
 
-            for adc in self.__adcs:
-                channel_data = adc.value
-                self.__a_receiveBuf.append(channel_data)
+    def getValue(self):
+        self.log.info("Receiving board stats data")
+        data = dict()
 
-            self.__receive_time = time.time()
-        except Exception as e:
-            log.error(e)
+        data["cpu_temp"] = self._cpu.temperature
+        data["cpu_throttle"] = self._cpu.temperature >= self.CPU_THROTTLE_DEGC
+        data["cpu_usage_perc"] = psutil.cpu_percent()
+        data["gpu_temp"] = self._get_gpu_temp()
+        data["mem_usage_perc"] = self._mem.usage
+        data["mem_total_mb"] = self._mem.capacity
+        data["disk_usage_perc"] = round(self._disk.usage, 1)
+        data["disk_total_mb"] = kb_to_mb(psutil.disk_usage('/').total)
+        #data["load_avg"] = self._load.load_average
 
-    def get_all_sensor_values(self):
-        if self.__is_state_data():
-            self.read()
+        return data
 
-        return self.__a_receiveBuf.copy()
+    @property
+    def cpu_temperature(self):
+        return self.value["cpu_temp"]
 
-    def get_sensor_value(self, channel):
-        if self.__is_state_data():
-            self.read()
+    @property
+    def cpu_throttle(self):
+        return self.value["cpu_throttle"]
 
-        return self.__a_receiveBuf.copy()[channel]
+    @property
+    def cpu_usage_perc(self):
+        return self.value["cpu_usage_perc"]
 
-    def __is_state_data(self):
-        log.debug("Checking for stale data")
-        epoch_time = time.time()
-        log.debug("Epoch time is {}, last receive time is {}".format(
-            epoch_time, self.__receive_time))
-        data_age = time.time() - self.__receive_time
-        is_stale = epoch_time - self.__receive_time > self.__max_data_age_seconds
-        log.debug(
-            "Data age is {} seconds; stale: {}".format(data_age, is_stale))
+    @property
+    def gpu_temperature(self):
+        return self.value["gpu_temp"]
 
-        return is_stale
+    @property
+    def memory_usage_perc(self):
+        return self.value["mem_usage_perc"]
 
-    def __clear_receive_buf(self):
-        log.debug("Re-initializing receive buffer")
-        self.__a_receiveBuf = []
+    @property
+    def memory_total_mb(self):
+        return self.value["mem_total_mb"]
+
+    @property
+    def disk_usage_perc(self):
+        return self.value["disk_usage_perc"]
+
+    @property
+    def disk_total_mb(self):
+        return self.value["disk_total_mb"]
+
+    @property
+    def load_avg(self):
+        return self.value["load_avg"]
+
+    def _get_gpu_temp(self):
+        res = os.popen('/opt/vc/bin/vcgencmd measure_temp').readline()
+        res = res.replace("temp=", "")
+        res = res.replace("'C\n", "")
+
+        return float(res)
+
+    def __iter__(self):
+        yield 'cpu_temp',           self.cpu_temperature
+        yield 'cpu_throttle',       self.cpu_throttle
+        yield 'cpu_usage_perc',     self.cpu_usage_perc
+        yield 'gpu_temp',           self.gpu_temperature
+        yield 'mem_usage_perc',     self.memory_usage_perc
+        yield 'mem_total_mb',       self.memory_total_mb
+        yield 'disk_usage_perc',    self.disk_usage_perc
+        yield 'disk_total_mb',      self.disk_total_mb
+        # yield 'load_avg',         self.load_avg
+
 
 class MemoryUsage:
-    def __init__(self):
-        self._usage = 0
-        self._capacity = 0
-        
+
     @property
     def usage(self):
-        memory = psutil.virtual_memory()
-        # Divide from Bytes -> KB -> MB
-        available = round(memory.available/1024.0/1024.0,1)
-        total = round(memory.total/1024.0/1024.0,1)
-        return str(available) + 'MB free / ' + str(total) + 'MB total ( ' + str(memory.percent) + '% )'
+        mem = psutil.virtual_memory()
+        return mem.percent
+
+    @property
+    def capacity(self):
+        mem = psutil.virtual_memory()
+        return kb_to_mb(mem.total)
+
+
+def kb_to_mb(kb):
+    return round(kb/1024.0/1024.0, 1)
