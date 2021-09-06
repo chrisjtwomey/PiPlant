@@ -9,9 +9,14 @@ class SoilMoistureSensor(PolledSensor):
         self.sensor_id = "Soil Moisture Sensor #{}".format(adc_channel)
         self._adc = MCP3008(channel=adc_channel,
                             max_voltage=self.ADC_MAX_VOLTAGE)
+        self._adc_channel = adc_channel
         super().__init__(poll_interval=poll_interval)
         self.log.info(
             "Initialized Soil Moisture Sensor with channel {}".format(adc_channel))
 
     def getValue(self):
         return self._adc.value
+
+    @property
+    def adc_channel(self):
+        return self._adc_channel
