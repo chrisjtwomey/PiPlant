@@ -6,7 +6,7 @@ from sensors.devicestatistics import DeviceStatistics
 from sensors.sensorhub import SensorHub
 from sensors.soilmoisture import SoilMoistureSensor
 
-logging.config.fileConfig('./logging.ini')
+logging.config.fileConfig('./logging.dev.ini')
 
 
 class PiPlant(PolledSensor):
