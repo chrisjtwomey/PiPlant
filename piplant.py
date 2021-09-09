@@ -1,4 +1,5 @@
 import time
+import os
 import logging.config
 from display.epaper import EPaper
 from sensors.polledsensor import PolledSensor
@@ -6,7 +7,8 @@ from sensors.devicestatistics import DeviceStatistics
 from sensors.sensorhub import SensorHub
 from sensors.soilmoisture import SoilMoistureSensor
 
-logging.config.fileConfig('./logging.dev.ini')
+cwd = os.path.dirname(os.path.realpath(__file__))
+logging.config.fileConfig(os.path.join(cwd, 'cfg', 'logging.dev.ini'))
 
 
 class PiPlant(PolledSensor):
