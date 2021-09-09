@@ -129,3 +129,6 @@ dmypy.json
 
 # Debug
 *.log.*
+
+# Vscode
+workspace.code-workspace
