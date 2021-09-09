@@ -23,10 +23,9 @@ class BoardStats(PolledSensor):
 
         super().__init__(poll_interval=poll_interval)
         self._value = dict()
-        self.log.info("Initialized Board Statistics monitor")
+        self.log.debug("Initialized Board Statistics monitor")
 
     def getValue(self):
-        self.log.info("Receiving board stats data")
         data = dict()
 
         data["cpu_temp"] = self._cpu.temperature

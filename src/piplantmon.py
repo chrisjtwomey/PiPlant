@@ -13,6 +13,24 @@ class PiPlantMon(PolledSensor):
 
     def __init__(self, poll_interval=1):
         self.sensor_id = "PiPlant"
+        super().__init__(poll_interval=poll_interval)
+
+        self.log.info(r"""\
+            
+                            PiPlant
+                    _
+                  _(_)_                          wWWWw   _
+      @@@@       (_)@(_)   vVVVv     _     @@@@  (___) _(_)_
+     @@()@@ wWWWw  (_)\    (___)   _(_)_  @@()@@   Y  (_)@(_)
+      @@@@  (___)     `|/    Y    (_)@(_)  @@@@   \|/   (_)\
+       /      Y       \|    \|/    /(_)    \|      |/      |
+    \ |     \ |/       | / \ | /  \|/       |/    \|      \|/
+    \\|//   \\|///  \\\|//\\\|/// \|///  \\\|//  \\|//  \\\|// 
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        """)
+
+        self.log.info("Initializing sensors...")
+
         self.soil_moisture_sensors = [
             SoilMoistureSensor(adc_channel=0, poll_interval=poll_interval),
             SoilMoistureSensor(adc_channel=1, poll_interval=poll_interval),
@@ -25,18 +43,14 @@ class PiPlantMon(PolledSensor):
 
         self.display = EPaperDisplay()
         self.display.drawLogo(self.sensor_id)
-        self.sleep(5)
+        self.sleep(2)
         self.display.flush()
-        sys.exit(0)
 
-        super().__init__(poll_interval=poll_interval)
         self._value = dict()
-        self.log.info("###########################")
-        self.log.info("# PiPlantMon")
-        self.log.info("###########################")
-        self.log.info("Initialized PiPlantMon - polling for new data every {} seconds".format(poll_interval))
+        self.log.info("Initialized: polling for new data every {} seconds".format(poll_interval))
 
     def run(self):
+        self.log.info("Polling for new data")
         self.getValue()
 
     def getValue(self):
@@ -73,5 +87,4 @@ if __name__ == '__main__':
     ppm = PiPlantMon(poll_interval=5)
     while True:
         ppm.run()
-
-        ppm.sleep(1)
+        ppm.sleep(5)

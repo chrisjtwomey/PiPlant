@@ -50,10 +50,9 @@ class SensorHub(PolledSensor):
         if status == self.BOARD_STATUS_ERROR:
             raise ValueError("Failed to initialize SensorHub board with status: {}".format(status))
 
-        self.log.info("Initialized SensorHub board with status: {}".format(status))
+        self.log.debug("Initialized SensorHub board with status: {}".format(status))
 
     def getValue(self):
-        log.info("Receiving SensorHub data")
         self._bus = smbus.SMBus(self.DEVICE_BUS)
 
         data_buffer = [0x00]

@@ -25,6 +25,7 @@ class PolledSensor:
             return self._value
 
         try:
+            self.log.debug("Requesting new data")
             data = self.getValue()
             self._value = data
             self._receive_time = math.ceil(time.time())
@@ -43,16 +44,15 @@ class PolledSensor:
     def _is_stale_data(self):
         self.log.debug("Checking for stale data")
 
-        if self._value == None:
+        if self._value == None or self._receive_time == 0:
             self.log.debug("No previous data received")
             return True
 
-        epoch_time = math.ceil(time.time())
         receive_time_dtfmt = datetime.fromtimestamp(
             self._receive_time).strftime(self.POLL_TIME_FORMAT)
         self.log.debug("Last receive time is {}".format(receive_time_dtfmt))
-        data_age = time.time() - self._receive_time
-        is_stale = epoch_time - self._receive_time > self._poll_interval
+        data_age = math.ceil(time.time() - self._receive_time)
+        is_stale = data_age >= self._poll_interval
         self.log.debug(
             "Data age is {} seconds; stale: {}".format(data_age, is_stale))
 

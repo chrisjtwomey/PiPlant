@@ -11,7 +11,7 @@ class SoilMoistureSensor(PolledSensor):
                             max_voltage=self.ADC_MAX_VOLTAGE)
         self._adc_channel = adc_channel
         super().__init__(poll_interval=poll_interval)
-        self.log.info(
+        self.log.debug(
             "Initialized Soil Moisture Sensor with channel {}".format(adc_channel))
 
     def getValue(self):
