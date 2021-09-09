@@ -5,11 +5,12 @@ from PIL import ImageFont
 from PIL import ImageDraw
 import logging
 
-class EPaperDisplay:
+
+class EPaper:
 
     def __init__(self):
-        self.log = logging.getLogger("PiPlantMon display")
-        self.log.debug("Initializing E-Paper")
+        self.log = logging.getLogger("e-Paper")
+        self.log.debug("Initializing...")
 
         epd = EPD()
         epd.init()
@@ -19,15 +20,18 @@ class EPaperDisplay:
         self.width = self.epd.height
         self.height = self.epd.width
 
-        self.picdir = os.path.join(os.path.dirname(os.path.dirname(os.path.realpath(__file__))), 'static', 'bmp')
-        self.fontdir = os.path.join(os.path.dirname(os.path.dirname(os.path.realpath(__file__))), 'static', 'font')
-        self.logofont = ImageFont.truetype(os.path.join(self.fontdir, "Lobster-Regular.ttf"), 32)
-        
+        self.picdir = os.path.join(os.path.dirname(
+            os.path.dirname(os.path.realpath(__file__))), 'static', 'bmp')
+        self.fontdir = os.path.join(os.path.dirname(
+            os.path.dirname(os.path.realpath(__file__))), 'static', 'font')
+        self.logofont = ImageFont.truetype(
+            os.path.join(self.fontdir, "Lobster-Regular.ttf"), 32)
+
         self.flush()
-        self.log.debug("E-Paper display initialized")
-     
+        self.log.debug("Initialized")
+
     def flush(self):
-        self.log.debug("Flushing E-Paper display")
+        self.log.debug("Flushing")
         image = Image.new('1', (self.epd.height, self.epd.width), 255)
         self.epd.display_frame(image.rotate(self.rotation, expand=True))
 
@@ -38,7 +42,8 @@ class EPaperDisplay:
 
         # center text in display
         size_x, size_y = font.getsize(logo_text)
-        logo_coords = self.translate((self.width / 2 - size_x / 2) + 10, self.height / 2 + size_y / 2)
+        logo_coords = self.translate(
+            (self.width / 2 - size_x / 2) + 10, self.height / 2 + size_y / 2)
         logo_x, logo_y = logo_coords
 
         bmp = Image.open(os.path.join(self.picdir, 'plant-4.bmp'))

@@ -32,8 +32,6 @@ class SensorHub(PolledSensor):
     EMPTY_RECEIVE_BUG = [0x00]
 
     def __init__(self, poll_interval=1):
-        self.sensor_id = "SensorHub"
-
         self._external_temperature = 0
         self._onboard_temperature = 0
         self._onboard_brightness = 0
@@ -48,9 +46,10 @@ class SensorHub(PolledSensor):
         status, _, _ = self.status()
 
         if status == self.BOARD_STATUS_ERROR:
-            raise ValueError("Failed to initialize SensorHub board with status: {}".format(status))
+            raise ValueError(
+                "Failed to initialize with status: {}".format(status))
 
-        self.log.debug("Initialized SensorHub board with status: {}".format(status))
+        self.log.debug("Initialized with status: {}".format(status))
 
     def getValue(self):
         self._bus = smbus.SMBus(self.DEVICE_BUS)

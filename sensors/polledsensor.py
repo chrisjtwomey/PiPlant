@@ -14,8 +14,8 @@ class PolledSensor:
 
         self._value = None
 
-        if self.sensor_id == None:
-            self.sensor_id = "Generic Sensor #0"
+        if not hasattr(self, 'sensor_id') or self.sensor_id == None:
+            self.sensor_id = self.__class__.__name__
 
         self.log = logging.getLogger(self.sensor_id)
 

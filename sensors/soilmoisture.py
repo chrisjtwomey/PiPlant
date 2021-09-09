@@ -12,7 +12,7 @@ class SoilMoistureSensor(PolledSensor):
         self._adc_channel = adc_channel
         super().__init__(poll_interval=poll_interval)
         self.log.debug(
-            "Initialized Soil Moisture Sensor with channel {}".format(adc_channel))
+            "Initialized")
 
     def getValue(self):
         return self._adc.value

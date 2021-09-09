@@ -1,18 +1,17 @@
-import sys
 import time
 import logging.config
-from display.epaper import EPaperDisplay
+from display.epaper import EPaper
 from sensors.polledsensor import PolledSensor
-from sensors.boardstats import BoardStats
+from sensors.devicestatistics import DeviceStatistics
 from sensors.sensorhub import SensorHub
 from sensors.soilmoisture import SoilMoistureSensor
 
 logging.config.fileConfig('./logging.ini')
 
-class PiPlantMon(PolledSensor):
+
+class PiPlant(PolledSensor):
 
     def __init__(self, poll_interval=1):
-        self.sensor_id = "PiPlant"
         super().__init__(poll_interval=poll_interval)
 
         self.log.info(r"""\
@@ -39,15 +38,16 @@ class PiPlantMon(PolledSensor):
             SoilMoistureSensor(adc_channel=4, poll_interval=poll_interval),
         ]
         self.sensorhub = SensorHub(poll_interval=poll_interval)
-        self.boardstats = BoardStats(poll_interval=poll_interval)
+        self.boardstats = DeviceStatistics(poll_interval=poll_interval)
 
-        self.display = EPaperDisplay()
+        self.display = EPaper()
         self.display.draw_splash_screen(self.sensor_id)
         self.sleep(2)
         self.display.flush()
 
         self._value = dict()
-        self.log.info("Initialized: polling for new data every {} seconds".format(poll_interval))
+        self.log.info(
+            "Initialized: polling for new data every {} seconds".format(poll_interval))
 
     def run(self):
         self.log.info("Polling for new data")
@@ -83,8 +83,9 @@ class PiPlantMon(PolledSensor):
     def sleep(self, seconds):
         time.sleep(seconds)
 
+
 if __name__ == '__main__':
-    ppm = PiPlantMon(poll_interval=5)
+    ppm = PiPlant(poll_interval=5)
     while True:
         ppm.run()
         ppm.sleep(5)

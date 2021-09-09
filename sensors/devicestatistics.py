@@ -1,10 +1,10 @@
 import os
 import psutil
 from .polledsensor import PolledSensor
-from gpiozero import CPUTemperature, LoadAverage, DiskUsage, PiBoardInfo
+from gpiozero import CPUTemperature, LoadAverage, DiskUsage
 
 
-class BoardStats(PolledSensor):
+class DeviceStatistics(PolledSensor):
     MIN_CPU_DEGC = 0
     CPU_THROTTLE_DEGC = 82
     CPU_TEMP_LIMIT = 85
@@ -13,7 +13,7 @@ class BoardStats(PolledSensor):
     MAX_LOAD_AVG = 2
 
     def __init__(self, poll_interval=1):
-        self.sensor_id = "Board Statistics"
+        self.sensor_id = "Device Statistics"
         self._cpu = CPUTemperature(
             min_temp=self.MIN_CPU_DEGC, max_temp=self.MAX_CPU_DEGC)
         self._mem = MemoryUsage()
@@ -23,7 +23,7 @@ class BoardStats(PolledSensor):
 
         super().__init__(poll_interval=poll_interval)
         self._value = dict()
-        self.log.debug("Initialized Board Statistics monitor")
+        self.log.debug("Initialized")
 
     def getValue(self):
         data = dict()
