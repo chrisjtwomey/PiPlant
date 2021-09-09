@@ -31,8 +31,8 @@ class EPaperDisplay:
         image = Image.new('1', (self.epd.height, self.epd.width), 255)
         self.epd.display_frame(image.rotate(self.rotation, expand=True))
 
-    def drawLogo(self, logo_text):
-        self.log.debug("Drawing logo")
+    def draw_splash_screen(self, logo_text):
+        self.log.debug("Drawing splash screen")
         font = self.logofont
         image = Image.new('1', (self.epd.height, self.epd.width), 255)
 
@@ -50,7 +50,7 @@ class EPaperDisplay:
 
         self.draw(image)
 
-    def drawData(self, data):
+    def draw_data(self, data):
         return None
 
     def translate(self, x, y):

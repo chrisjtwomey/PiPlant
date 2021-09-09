@@ -42,7 +42,7 @@ class PiPlantMon(PolledSensor):
         self.boardstats = BoardStats(poll_interval=poll_interval)
 
         self.display = EPaperDisplay()
-        self.display.drawLogo(self.sensor_id)
+        self.display.draw_splash_screen(self.sensor_id)
         self.sleep(2)
         self.display.flush()
 
@@ -78,7 +78,7 @@ class PiPlantMon(PolledSensor):
         return None
 
     def render(self, data):
-        self.display.drawData(data)
+        self.display.draw_data(data)
 
     def sleep(self, seconds):
         time.sleep(seconds)
