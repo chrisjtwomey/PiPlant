@@ -1,4 +1,3 @@
-import warnings
 import smbus
 import logging
 from .polledsensor import PolledSensor

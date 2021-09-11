@@ -43,7 +43,7 @@ class PiPlant(PolledSensor):
         self.boardstats = DeviceStatistics(poll_interval=poll_interval)
 
         self.display = EPaper()
-        self.display.draw_splash_screen(self.sensor_id)
+        self.display.draw_splash_screen()
         self.sleep(2)
         self.display.flush()
 
@@ -87,7 +87,7 @@ class PiPlant(PolledSensor):
 
 
 if __name__ == '__main__':
-    ppm = PiPlant(poll_interval=5)
+    ppm = PiPlant(poll_interval=30)
     while True:
         ppm.run()
-        ppm.sleep(5)
+        ppm.sleep(30)
