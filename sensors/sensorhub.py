@@ -84,9 +84,9 @@ class SensorHub(PolledSensor):
 
     @property
     def barometer_pressure(self):
-        return (self.value[self.BMP280_PRESSURE_REG_L] |
+        return round((self.value[self.BMP280_PRESSURE_REG_L] |
                 self.value[self.BMP280_PRESSURE_REG_M] << 8 |
-                self.value[self.BMP280_PRESSURE_REG_H] << 16)
+                self.value[self.BMP280_PRESSURE_REG_H] << 16) / 100)
 
     @property
     def livebody_detection(self):

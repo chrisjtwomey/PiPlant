@@ -19,6 +19,7 @@ class PiPlant(PolledSensor):
         self.log.info(r"""\
             
                             PiPlant
+                         @chrisjtwomey
                     _
                   _(_)_                          wWWWw   _
       @@@@       (_)@(_)   vVVVv     _     @@@@  (___) _(_)_
@@ -58,7 +59,10 @@ class PiPlant(PolledSensor):
     def getValue(self):
         soil_moisture_data = dict()
         for sensor in self.soil_moisture_sensors:
-            soil_moisture_data[sensor.adc_channel] = sensor.value
+            soil_moisture_data[sensor.adc_channel] = {
+                "value": sensor.value,
+                "error": not sensor.in_range
+            }
 
         sensorhub_data = dict(self.sensorhub)
         boardstats_data = dict(self.boardstats)
@@ -87,7 +91,7 @@ class PiPlant(PolledSensor):
 
 
 if __name__ == '__main__':
-    ppm = PiPlant(poll_interval=30)
+    ppm = PiPlant(poll_interval=10)
     while True:
         ppm.run()
         ppm.sleep(30)
