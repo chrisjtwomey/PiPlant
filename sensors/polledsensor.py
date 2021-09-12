@@ -2,42 +2,25 @@ import math
 import time
 import logging
 from datetime import datetime
+from sensors.sensor import Sensor
 from gpiozero import GPIOZeroError, GPIOZeroWarning
 
 
-class PolledSensor:
+class PolledSensor(Sensor):
     POLL_TIME_FORMAT = "%Y-%m-%d %H:%M:%S"
 
     def __init__(self, poll_interval=1):
         self._receive_time = 0
         self._poll_interval = poll_interval
 
-        self._value = None
-
-        if not hasattr(self, 'sensor_id') or self.sensor_id == None:
-            self.sensor_id = self.__class__.__name__
-
-        self.log = logging.getLogger(self.sensor_id)
+        super().__init__()
 
     @property
     def value(self):
-        if not self._is_stale_data():
-            return self._value
-
-        try:
-            self.log.debug("Requesting new data")
-            data = self.getValue()
+        if self._is_stale_data():
+            data = self.get_value()
             self._value = data
             self._receive_time = math.ceil(time.time())
-        except GPIOZeroWarning as w:
-            self.log.error('A GPIO Zero warning occurred')
-            self.log.warning(w)
-        except GPIOZeroError as e:
-            self.log.error('A GPIO Zero error occurred')
-            self.log.error(e)
-        except Exception as e:
-            self.log.error('An generic exception error has occurred')
-            self.log.error(e)
 
         return self._value
 

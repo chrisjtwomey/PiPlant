@@ -1,11 +1,11 @@
 from gpiozero import MCP3008
-from .polledsensor import PolledSensor
+from .sensor import Sensor
 
 
-class SoilMoistureSensor(PolledSensor):
+class SoilMoistureSensor(Sensor):
     ADC_MAX_VOLTAGE = 3.3
 
-    def __init__(self, adc_channel=0, poll_interval=1, water_threshold = 25, calibrated_min_value=0.35, calibrated_max_value=0.75):
+    def __init__(self, adc_channel, water_threshold = 25, calibrated_min_value=0.35, calibrated_max_value=0.75):
         self.sensor_id = "Soil Moisture Sensor #{}".format(adc_channel)
         self._adc = MCP3008(channel=adc_channel,
                             max_voltage=self.ADC_MAX_VOLTAGE)
@@ -13,11 +13,11 @@ class SoilMoistureSensor(PolledSensor):
         self._water_threshold = water_threshold
         self._calibrated_min_value = calibrated_min_value
         self._calibrated_max_value = calibrated_max_value
-        super().__init__(poll_interval=poll_interval)
+        super().__init__()
         self.log.debug(
             "Initialized")
 
-    def getValue(self):
+    def get_value(self):
         val = self._adc.value
         min = self._calibrated_min_value
         max = self._calibrated_max_value

@@ -1,8 +1,8 @@
 import smbus
-from .polledsensor import PolledSensor
+from .sensor import Sensor
 
 
-class SensorHub(PolledSensor):
+class SensorHub(Sensor):
     BOARD_STATUS_OK = "OK"
     BOARD_STATUS_ERROR = "ERROR"
     BOARD_STATUS_WARNING = "WARNING"
@@ -27,7 +27,7 @@ class SensorHub(PolledSensor):
 
     EMPTY_RECEIVE_BUG = [0x00]
 
-    def __init__(self, poll_interval=1):
+    def __init__(self):
         self._external_temperature = 0
         self._onboard_temperature = 0
         self._onboard_brightness = 0
@@ -36,7 +36,7 @@ class SensorHub(PolledSensor):
         self._barometer_pressure = 0
         self._livebody_detection = False
 
-        super().__init__(poll_interval=poll_interval)
+        super().__init__()
         self._value = dict()
 
         status, _, _ = self.status()
@@ -47,7 +47,7 @@ class SensorHub(PolledSensor):
 
         self.log.debug("Initialized with status: {}".format(status))
 
-    def getValue(self):
+    def get_value(self):
         self._bus = smbus.SMBus(self.DEVICE_BUS)
 
         data_buffer = [0x00]
@@ -128,7 +128,7 @@ class SensorHub(PolledSensor):
         elif len(errors) > 0:
             status = self.BOARD_STATUS_ERROR
 
-        self.log.debug("SensorHub status: {}".format(status))
+        self.log.debug("SensorHub status:\t{}".format(status))
         self.log.debug("\tWarnings:\t{}".format(len(warnings)))
         self.log.debug("\tErrors:\t\t{}".format(len(errors)))
 

@@ -167,8 +167,6 @@ class EPaper:
         image.paste(bmp, (x, y))
 
     def draw_data(self, data):
-        self.log.debug("Drawing data")
-
         soil_moisture_data = data["soil_moisture"]
         enviroment_data = data["environment"]
         device_data = data["device"]

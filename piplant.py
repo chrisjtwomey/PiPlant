@@ -31,35 +31,37 @@ class PiPlant(PolledSensor):
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
         """)
 
-        skip_splash_screen = True
+        skip_splash_screen = False
 
         self.log.info("Initializing sensors...")
 
         self.soil_moisture_sensors = [
-            SoilMoistureSensor(adc_channel=0, poll_interval=poll_interval, calibrated_max_value=0.68),
-            SoilMoistureSensor(adc_channel=1, poll_interval=poll_interval, calibrated_max_value=0.70),
-            SoilMoistureSensor(adc_channel=2, poll_interval=poll_interval, calibrated_max_value=0.67),
-            SoilMoistureSensor(adc_channel=3, poll_interval=poll_interval, calibrated_max_value=0.69),
-            SoilMoistureSensor(adc_channel=4, poll_interval=poll_interval, calibrated_max_value=0.68),
+            SoilMoistureSensor(adc_channel=0, calibrated_max_value=0.68),
+            SoilMoistureSensor(adc_channel=1, calibrated_max_value=0.70),
+            SoilMoistureSensor(adc_channel=2, calibrated_max_value=0.67),
+            SoilMoistureSensor(adc_channel=3, calibrated_max_value=0.69),
+            SoilMoistureSensor(adc_channel=4, calibrated_max_value=0.68),
         ]
-        self.sensorhub = SensorHub(poll_interval=poll_interval)
-        self.boardstats = DeviceStatistics(poll_interval=poll_interval)
+        self.sensorhub = SensorHub()
+        self.boardstats = DeviceStatistics()
+
+        self.log.info("Sensors initialized")
+        self.log.info("Initializing display...")
 
         self.display = EPaper()
         if not skip_splash_screen:
             self.display.draw_splash_screen()
-            self.sleep(2)
+            self.pause(2)
             self.display.flush()
 
+        self.log.info("Display initialized")
+
         self._value = dict()
-        self.log.info(
-            "Initialized: polling for new data every {} seconds".format(poll_interval))
+        self.log.info("PiPlant initialized: fetching data every {} seconds".format(poll_interval))
 
-    def run(self):
-        self.log.info("Polling for new data")
-        self.getValue()
+    def get_value(self):
+        self.log.info("Fetching data...")
 
-    def getValue(self):
         soil_moisture_data = dict()
         for sensor in self.soil_moisture_sensors:
             soil_moisture_data[sensor.adc_channel] = {
@@ -76,26 +78,35 @@ class PiPlant(PolledSensor):
             "environment": sensorhub_data,
             "device": boardstats_data,
         }
-
-        self.process(data_payload)
-        self.render(data_payload)
+        self.log.info("Fetch finished")
 
         return data_payload
 
-    def process(self, data):
+    def process(self):
+        self.log.info("Processing data...")
+        data = self._value
         # save to db
         # print(data)
+        self.log.info("Processing finished")
         return None
 
-    def render(self, data):
+    def render(self,):
+        self.log.info("Rendering data...")
+        data = self._value
         self.display.draw_data(data)
+        self.log.info("Rendering finished")
 
-    def sleep(self, seconds):
+    def pause(self, seconds):
+        self.log.debug("Pausing for {} seconds...".format(seconds))
         time.sleep(seconds)
 
 
 if __name__ == '__main__':
-    ppm = PiPlant(poll_interval=20)
+    poll_interval = 20
+    ppm = PiPlant(poll_interval)
+    
     while True:
-        ppm.run()
-        ppm.sleep(20)
+        ppm.value
+        ppm.process()
+        ppm.render()
+        ppm.pause(poll_interval)
