@@ -1,8 +1,5 @@
 import smbus
-import logging
 from .polledsensor import PolledSensor
-
-log = logging.getLogger(__name__)
 
 
 class SensorHub(PolledSensor):
@@ -85,8 +82,8 @@ class SensorHub(PolledSensor):
     @property
     def barometer_pressure(self):
         return round((self.value[self.BMP280_PRESSURE_REG_L] |
-                self.value[self.BMP280_PRESSURE_REG_M] << 8 |
-                self.value[self.BMP280_PRESSURE_REG_H] << 16) / 100)
+                      self.value[self.BMP280_PRESSURE_REG_M] << 8 |
+                      self.value[self.BMP280_PRESSURE_REG_H] << 16) / 100)
 
     @property
     def livebody_detection(self):

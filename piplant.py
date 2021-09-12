@@ -31,22 +31,25 @@ class PiPlant(PolledSensor):
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
         """)
 
+        skip_splash_screen = True
+
         self.log.info("Initializing sensors...")
 
         self.soil_moisture_sensors = [
-            SoilMoistureSensor(adc_channel=0, poll_interval=poll_interval),
-            SoilMoistureSensor(adc_channel=1, poll_interval=poll_interval),
-            SoilMoistureSensor(adc_channel=2, poll_interval=poll_interval),
-            SoilMoistureSensor(adc_channel=3, poll_interval=poll_interval),
-            SoilMoistureSensor(adc_channel=4, poll_interval=poll_interval),
+            SoilMoistureSensor(adc_channel=0, poll_interval=poll_interval, calibrated_max_value=0.68),
+            SoilMoistureSensor(adc_channel=1, poll_interval=poll_interval, calibrated_max_value=0.70),
+            SoilMoistureSensor(adc_channel=2, poll_interval=poll_interval, calibrated_max_value=0.67),
+            SoilMoistureSensor(adc_channel=3, poll_interval=poll_interval, calibrated_max_value=0.69),
+            SoilMoistureSensor(adc_channel=4, poll_interval=poll_interval, calibrated_max_value=0.68),
         ]
         self.sensorhub = SensorHub(poll_interval=poll_interval)
         self.boardstats = DeviceStatistics(poll_interval=poll_interval)
 
         self.display = EPaper()
-        self.display.draw_splash_screen()
-        self.sleep(2)
-        self.display.flush()
+        if not skip_splash_screen:
+            self.display.draw_splash_screen()
+            self.sleep(2)
+            self.display.flush()
 
         self._value = dict()
         self.log.info(
@@ -61,6 +64,7 @@ class PiPlant(PolledSensor):
         for sensor in self.soil_moisture_sensors:
             soil_moisture_data[sensor.adc_channel] = {
                 "value": sensor.value,
+                "needs_water": sensor.needs_water,
                 "error": not sensor.in_range
             }
 
@@ -91,7 +95,7 @@ class PiPlant(PolledSensor):
 
 
 if __name__ == '__main__':
-    ppm = PiPlant(poll_interval=10)
+    ppm = PiPlant(poll_interval=20)
     while True:
         ppm.run()
-        ppm.sleep(30)
+        ppm.sleep(20)

@@ -32,6 +32,7 @@ from __future__ import unicode_literals, division, absolute_import
 
 import time
 import spidev
+import logging
 from .lut import LUT, QuickLUT
 import RPi.GPIO as GPIO
 from PIL import ImageChops
@@ -115,6 +116,7 @@ class EPD(object):
         self._partial_refresh_count = 0
         self._init_performed = False
         self.spi = spidev.SpiDev(0, 0)
+        self.log = logging.getLogger(__name__)
 
     def digital_write(self, pin, value):
         return GPIO.output(pin, value)
@@ -204,9 +206,22 @@ class EPD(object):
         self._init_performed = True
 
     def wait_until_idle(self):
+        self.log.debug("Display busy")
+        max_wait_ms = 2000
+        curr_wait_ms = 0
+        delay_ms = 50
         """ Wait until screen is idle by polling the busy pin """
+        self.send_command(0x71)
         while(self.digital_read(BUSY_PIN) == 0):      # 0: busy, 1: idle
-            self.delay_ms(50)
+            # if curr_wait_ms >= max_wait_ms:
+            #     self.reset()
+            #     break
+
+            self.send_command(0x71)
+            self.delay_ms(delay_ms)
+            curr_wait_ms += delay_ms
+
+        self.log.debug("Busy release")
 
     def reset(self):
         """ Module reset """

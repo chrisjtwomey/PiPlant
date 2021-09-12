@@ -14,7 +14,7 @@ class EPaper:
         self.log = logging.getLogger("e-Paper")
         self.log.debug("Initializing...")
 
-        epd = EPD()
+        epd = EPD(fast_refresh=False)
         epd.init()
         self.epd = epd
 
@@ -93,29 +93,33 @@ class EPaper:
 
     def draw_soil_moisture_data(self, image, data):
         self.log.debug("Drawing soil moisture data")
-        bmp = Image.open(os.path.join(self.picdir, 'plant_24x24.bmp'))
-        bmp_warning = Image.open(os.path.join(
-            self.picdir, 'warning_16x16.bmp'))
-        bmp_x = self.margin_px + bmp.width / 2
-        for idx in range(len(data)):
-            bmp_y = self.height - self.header_height - 10 - \
-                (idx * bmp.height * self.plant_bmp_margin_ratio)
-            # draw img
-            image.paste(bmp, self.translate(bmp_x, bmp_y))
+        bmp_plant = 'plant_24x24.bmp'
+        bmp_warning = 'warning_24x24.bmp'
+        bmp_start_y = self.height - self.header_height - 10
 
+        for idx in range(len(data)):
             sms_data = data[idx]
             sms_value = sms_data["value"]
+            sms_water = sms_data["needs_water"]
             sms_error = sms_data["error"]
 
-            if sms_error:
-                image.paste(bmp_warning, self.translate(
-                    bmp_x + bmp_warning.width, bmp_y - bmp.height))
+            bmp_file = bmp_warning if sms_error else bmp_plant
+            bmp = Image.open(os.path.join(self.picdir, bmp_file))
 
+            bmp_x, bmp_y = self.translate(self.margin_px + bmp.width / 2, bmp_start_y - (
+                idx * bmp.height * self.plant_bmp_margin_ratio))
+            image.paste(bmp, (bmp_x, bmp_y))
+
+            if sms_water:
+                # draw water warning
+                bmp_water = Image.open(os.path.join(self.picdir, 'water_10x13.bmp'))
+                image.paste(bmp_water, (int(bmp_x + bmp.width / 2), int(bmp_y + bmp.height / 2)))
+    
             # draw sensor id
             sms_id_str = str(idx + 1)
             draw = ImageDraw.Draw(image)
-            draw.text(self.translate(bmp_x - self.margin_px,
-                      bmp_y - bmp.height / 2), sms_id_str, font=self.text_tiny, fill=0)
+            draw.text((bmp_x - 8, bmp_y + bmp.height / 2),
+                      sms_id_str, font=self.text_tiny, fill=0)
 
             if not sms_error:
                 # draw moisture levels
@@ -144,17 +148,18 @@ class EPaper:
         idx = 0
         for key, unit in display_vals.items():
             # draw external temp
-            bmp = Image.open(os.path.join(self.picdir, '{}_24x24.bmp').format(key))
+            bmp = Image.open(os.path.join(
+                self.picdir, '{}_24x24.bmp').format(key))
             bmp_x = origin_x + self.margin_px
             bmp_y = origin_y - self.header_height + 30 + (35 * idx)
             image.paste(bmp, (bmp_x, bmp_y))
 
             data_msg = str(data[key]) + unit
             draw = ImageDraw.Draw(image)
-            draw.text((bmp_x + bmp.width + self.margin_px, bmp_y), data_msg, font=self.text_small, fill=0)
+            draw.text((bmp_x + bmp.width + self.margin_px, bmp_y + 2),
+                      data_msg, font=self.text_small, fill=0)
 
             idx += 1
-
 
     def draw_logo(self, image, x, y, size="small"):
         bmp_file = "logo_112x40.bmp" if size == "large" else "logo_56x20.bmp"
