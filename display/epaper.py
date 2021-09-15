@@ -14,13 +14,13 @@ class EPaper:
         self.log = logging.getLogger("e-Paper")
         self.log.debug("Initializing...")
 
-        epd = EPD(fast_refresh=False)
+        epd = EPD(orientation="h", partial_refresh_limit = 2, fast_refresh=False)
         epd.init()
         self.epd = epd
 
         self.rotation = 270
-        self.width = self.epd.height - 9  # lines won't draw past 255
-        self.height = self.epd.width
+        self.width = self.epd.width
+        self.height = self.epd.height
 
         self.plant_bmp_margin_ratio = 1.2
         self.large_col_ratio = 0.6
@@ -54,7 +54,7 @@ class EPaper:
 
     def flush(self):
         self.log.debug("Flushing")
-        image = Image.new('1', (self.epd.height, self.epd.width), 255)
+        image = Image.new('1', (self.width, self.height), 255)
         self.epd.display_frame(image.rotate(self.rotation, expand=True))
 
     def draw_splash_screen(self):
