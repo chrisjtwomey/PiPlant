@@ -1,12 +1,11 @@
 import os
 import math
 from datetime import datetime
-from rpi_epd2in7.epd import EPD
+from rpi_epd3in7.epd import EPD
 from PIL import Image
 from PIL import ImageFont
 from PIL import ImageDraw
 import logging
-
 
 class EPaper:
 
@@ -14,13 +13,13 @@ class EPaper:
         self.log = logging.getLogger("e-Paper")
         self.log.debug("Initializing...")
 
-        epd = EPD(orientation="h", partial_refresh_limit = 2, fast_refresh=False)
+        epd = EPD()
         epd.init()
         self.epd = epd
 
-        self.rotation = 270
-        self.width = self.epd.width
-        self.height = self.epd.height
+        self.rotation = 0
+        self.width = self.epd.height
+        self.height = self.epd.width
 
         self.plant_bmp_margin_ratio = 1.2
         self.large_col_ratio = 0.6
@@ -54,12 +53,11 @@ class EPaper:
 
     def flush(self):
         self.log.debug("Flushing")
-        image = Image.new('1', (self.width, self.height), 255)
-        self.epd.display_frame(image.rotate(self.rotation, expand=True))
+        self.epd.clear()
 
     def draw_splash_screen(self):
         self.log.debug("Drawing splash screen")
-        image = Image.new('1', (self.width, self.height), 255)
+        image = Image.new('L', (self.width, self.height), 255)
 
         # center text in display
         logo_size = self.logo_sizes["large"]
@@ -85,7 +83,8 @@ class EPaper:
 
         font = self.text_tiny
         now = datetime.now()
-        dt_string = now.strftime("%d/%m/%Y %H:%M")
+        dt_string = now.strftime("%d/%m/%Y %H:%M:%S")
+        print(dt_string)
         size_x, size_y = font.getsize(dt_string)
         time_x, time_y = self.translate(
             self.width - 10 - size_x, self.height - size_y / 2)
@@ -94,6 +93,7 @@ class EPaper:
     def draw_soil_moisture_data(self, image, data):
         self.log.debug("Drawing soil moisture data")
         bmp_plant = 'plant_24x24.bmp'
+        bmp_plant_water = 'plant_water_24x24.bmp'
         bmp_warning = 'warning_24x24.bmp'
         bmp_start_y = self.height - self.header_height - 10
 
@@ -103,18 +103,17 @@ class EPaper:
             sms_water = sms_data["needs_water"]
             sms_error = sms_data["error"]
 
-            bmp_file = bmp_warning if sms_error else bmp_plant
-            bmp = Image.open(os.path.join(self.picdir, bmp_file))
+            bmp_file = bmp_plant_water if sms_water else bmp_plant
+            if sms_error:
+                bmp_file = bmp_warning
 
+            bmp = Image.open(os.path.join(self.picdir, bmp_file))
             bmp_x, bmp_y = self.translate(self.margin_px + bmp.width / 2, bmp_start_y - (
-                idx * bmp.height * self.plant_bmp_margin_ratio))
+                    idx * bmp.height * self.plant_bmp_margin_ratio))
+
             image.paste(bmp, (bmp_x, bmp_y))
 
-            if sms_water:
-                # draw water warning
-                bmp_water = Image.open(os.path.join(self.picdir, 'water_10x13.bmp'))
-                image.paste(bmp_water, (int(bmp_x + bmp.width / 2), int(bmp_y + bmp.height / 2)))
-    
+
             # draw sensor id
             sms_id_str = str(idx + 1)
             draw = ImageDraw.Draw(image)
@@ -192,7 +191,8 @@ class EPaper:
 
     def draw_circle(self, image, x, y, r):
         draw = ImageDraw.Draw(image)
-        draw.ellipse([(x-r, y-r), (x+r, y+r)], fill='black', outline='black')
+        draw.ellipse([(x-r, y-r), (x+r, y+r)], fill=0, outline=self.epd.GRAY4)
 
     def draw(self, image):
-        self.epd.smart_update(image.rotate(self.rotation, expand=True))
+        #self.epd.smart_update(image.rotate(self.rotation, expand=True))
+        self.epd.display_frame(image)

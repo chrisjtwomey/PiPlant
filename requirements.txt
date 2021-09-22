@@ -4,4 +4,4 @@ spidev>=3.0
 gpiozero>=1.6.2
 flask>=1.0.2
 smbus>=1.1.post2
-git+git://github.com/chrisjtwomey/rpi_epd2in7.git@dev#egg=rpi_ep2in7
+git+git://github.com/chrisjtwomey/rpi-epd3in7.git@master#egg=rpi_epd3in7

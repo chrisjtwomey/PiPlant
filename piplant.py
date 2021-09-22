@@ -13,7 +13,7 @@ logging.config.fileConfig(os.path.join(cwd, 'cfg', 'logging.dev.ini'))
 
 class PiPlant(PolledSensor):
 
-    def __init__(self, poll_interval=1):
+    def __init__(self, poll_interval=4):
         super().__init__(poll_interval=poll_interval)
 
         self.log.info(r"""\
@@ -31,7 +31,7 @@ class PiPlant(PolledSensor):
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
         """)
 
-        skip_splash_screen = False
+        skip_splash_screen = True
 
         self.log.info("Initializing sensors...")
 
@@ -93,7 +93,7 @@ class PiPlant(PolledSensor):
     def render(self,):
         self.log.info("Rendering data...")
         data = self._value
-        self.display.draw_data(data)
+        #self.display.draw_data(data)
         self.log.info("Rendering finished")
 
     def pause(self, seconds):
@@ -102,7 +102,7 @@ class PiPlant(PolledSensor):
 
 
 if __name__ == '__main__':
-    poll_interval = 20
+    poll_interval = 5
     ppm = PiPlant(poll_interval)
     
     while True:
