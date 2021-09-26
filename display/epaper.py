@@ -1,7 +1,8 @@
 import os
+import time
 import math
 from datetime import datetime
-from rpi_epd3in7.epd import EPD
+from .epd3in7 import EPD
 from PIL import Image
 from PIL import ImageFont
 from PIL import ImageDraw
@@ -13,11 +14,8 @@ class EPaper:
         self.log = logging.getLogger("e-Paper")
         self.log.debug("Initializing...")
 
-        epd = EPD()
-        epd.init()
-        self.epd = epd
+        self.epd = EPD()
 
-        self.rotation = 0
         self.width = self.epd.height
         self.height = self.epd.width
 
@@ -48,16 +46,17 @@ class EPaper:
         self.text_tiny = ImageFont.truetype(
             '/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf', 12)
 
-        self.flush()
         self.log.debug("Initialized")
 
     def flush(self):
         self.log.debug("Flushing")
-        self.epd.clear()
+        image = Image.new('L', (self.width, self.height), 0xFF)
+        self.draw(image, fast=False)
 
     def draw_splash_screen(self):
+        self.flush()
         self.log.debug("Drawing splash screen")
-        image = Image.new('L', (self.width, self.height), 255)
+        image = Image.new('1', (self.width, self.height), 255)
 
         # center text in display
         logo_size = self.logo_sizes["large"]
@@ -66,7 +65,8 @@ class EPaper:
         logo_x, logo_y = logo_coords
 
         self.draw_logo(image, int(logo_x), int(logo_y), size="large")
-        self.draw(image)
+        self.draw(image, fast=True)
+        self.delay_ms(2000)
 
     def draw_header(self, image):
         self.log.debug("Drawing header")
@@ -83,8 +83,7 @@ class EPaper:
 
         font = self.text_tiny
         now = datetime.now()
-        dt_string = now.strftime("%d/%m/%Y %H:%M:%S")
-        print(dt_string)
+        dt_string = now.strftime("%d/%m/%Y %H:%M")
         size_x, size_y = font.getsize(dt_string)
         time_x, time_y = self.translate(
             self.width - 10 - size_x, self.height - size_y / 2)
@@ -170,10 +169,10 @@ class EPaper:
         enviroment_data = data["environment"]
         device_data = data["device"]
 
-        image = Image.new('1', (self.width, self.height), 255)
+        image = Image.new('1', (self.width, self.height), 0xFF)
+       
         self.draw_header(image)
         self.draw_soil_moisture_data(image, soil_moisture_data)
-
         # draw column
         draw = ImageDraw.Draw(image)
         start_x, start_y = self.translate(
@@ -184,15 +183,23 @@ class EPaper:
 
         self.draw_environment_data(image, enviroment_data)
 
-        self.draw(image)
+        self.draw(image, fast=True)
 
     def translate(self, x, y):
         return (int(x), int(self.height - y))
 
     def draw_circle(self, image, x, y, r):
         draw = ImageDraw.Draw(image)
-        draw.ellipse([(x-r, y-r), (x+r, y+r)], fill=0, outline=self.epd.GRAY4)
+        draw.ellipse([(x-r, y-r), (x+r, y+r)], fill=0, outline=0)
 
-    def draw(self, image):
-        #self.epd.smart_update(image.rotate(self.rotation, expand=True))
-        self.epd.display_frame(image)
+    def draw(self, image, fast=False):
+        gray1_flag = 1 if fast else 0
+        self.epd.init(gray1_flag)
+        self.epd.Clear(0xFF, gray1_flag)
+        if fast:
+            self.epd.display_1Gray(self.epd.getbuffer(image))
+        else:
+            self.epd.display_4Gray(self.epd.getbuffer_4Gray(image))
+
+    def delay_ms(self, delaytime):
+        time.sleep(delaytime / 1000.0)

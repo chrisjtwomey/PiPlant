@@ -31,7 +31,7 @@ class PiPlant(PolledSensor):
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
         """)
 
-        skip_splash_screen = True
+        skip_splash_screen = False
 
         self.log.info("Initializing sensors...")
 
@@ -51,8 +51,6 @@ class PiPlant(PolledSensor):
         self.display = EPaper()
         if not skip_splash_screen:
             self.display.draw_splash_screen()
-            self.pause(2)
-            self.display.flush()
 
         self.log.info("Display initialized")
 
@@ -93,7 +91,7 @@ class PiPlant(PolledSensor):
     def render(self,):
         self.log.info("Rendering data...")
         data = self._value
-        #self.display.draw_data(data)
+        self.display.draw_data(data)
         self.log.info("Rendering finished")
 
     def pause(self, seconds):
