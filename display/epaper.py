@@ -2,7 +2,7 @@ import os
 import time
 import math
 from datetime import datetime
-from .epd3in7 import EPD
+from rpi_epd3in7.epd import EPD
 from PIL import Image
 from PIL import ImageFont
 from PIL import ImageDraw
@@ -56,7 +56,7 @@ class EPaper:
     def draw_splash_screen(self):
         self.flush()
         self.log.debug("Drawing splash screen")
-        image = Image.new('1', (self.width, self.height), 255)
+        image = Image.new('1', (self.width, self.height), 0xFF)
 
         # center text in display
         logo_size = self.logo_sizes["large"]
@@ -193,13 +193,10 @@ class EPaper:
         draw.ellipse([(x-r, y-r), (x+r, y+r)], fill=0, outline=0)
 
     def draw(self, image, fast=False):
-        gray1_flag = 1 if fast else 0
-        self.epd.init(gray1_flag)
-        self.epd.Clear(0xFF, gray1_flag)
-        if fast:
-            self.epd.display_1Gray(self.epd.getbuffer(image))
-        else:
-            self.epd.display_4Gray(self.epd.getbuffer_4Gray(image))
+        gray_flag = 1 if fast else 0
+        self.epd.init(mode=gray_flag)
+        self.epd.clear(mode=gray_flag)
+        self.epd.display_frame(image, mode=gray_flag)
 
     def delay_ms(self, delaytime):
         time.sleep(delaytime / 1000.0)
