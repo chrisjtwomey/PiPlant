@@ -93,6 +93,7 @@ class PiPlant(PolledSensor):
         data = self._value
         self.display.draw_data(data)
         self.log.info("Rendering finished")
+        self.display.sleep()
 
     def pause(self, seconds):
         self.log.debug("Pausing for {} seconds...".format(seconds))
@@ -103,8 +104,11 @@ if __name__ == '__main__':
     poll_interval = 5
     ppm = PiPlant(poll_interval)
     
-    while True:
-        ppm.value
-        ppm.process()
-        ppm.render()
-        ppm.pause(poll_interval)
+    # while True:
+    #     ppm.value
+    #     ppm.process()
+    #     ppm.render()
+    #     ppm.pause(poll_interval)
+    ppm.value
+    ppm.process()
+    ppm.render()
