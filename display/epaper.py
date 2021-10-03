@@ -1,133 +1,198 @@
-import os
 import time
-import math
-from datetime import datetime
-from rpi_epd3in7.epd import EPD
-from PIL import Image
-from PIL import ImageFont
-from PIL import ImageDraw
 import logging
 
+from datetime import datetime
+from rpi_epd3in7.epd import EPD
+from .util import PILUtil
+
+
 class EPaper:
+    WATER_PERCENT_0_DEGREES = 90
+    WATER_PERCENT_100_DEGREES = 330
 
     def __init__(self):
         self.log = logging.getLogger("e-Paper")
         self.log.debug("Initializing...")
 
-        self.epd = EPD()
+        # write display to file and don't sent to e-Paper
+        self.devmode = True
 
+        self.epd = EPD()
         self.width = self.epd.height
         self.height = self.epd.width
+        self.util = PILUtil(self.width, self.height)
 
         self.plant_bmp_margin_ratio = 1.2
-        self.large_col_ratio = 0.6
-        self.header_height = 40
+        self.header_height = self.height * 0.1
         self.margin_px = 5
 
-        self.max_moisture_display_dots = 8
-
+        self.icon_size_tiny = (18, 18)
         self.icon_size_small = (32, 32)
-        self.icon_size_large = (48, 48)
-        self.logo_size_small = (112, 40)
+        self.icon_size_medium = (48, 48)
+        self.icon_size_large = (80, 80)
+        self.logo_size_small = (100, 28)
         self.logo_size_large = (168, 60)
-
-        self.icondir = os.path.join(os.path.dirname(
-            os.path.dirname(os.path.realpath(__file__))), 'static', 'icon')
-        self.fontdir = os.path.join(os.path.dirname(
-            os.path.dirname(os.path.realpath(__file__))), 'static', 'font')
-        self.text_small = ImageFont.truetype(
-            '/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf', 24)
-        self.text_tiny = ImageFont.truetype(
-            '/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf', 16)
 
         self.log.debug("Initialized")
 
     def flush(self):
         self.log.debug("Flushing")
-        image = Image.new('L', (self.width, self.height), 0xFF)
-        self.draw(image, fast=False)
+        frame = self.util.new_frame(self.util.MODE_4GRAY)
+        self.draw_to_display(frame)
 
     def draw_splash_screen(self):
         self.flush()
         self.log.debug("Drawing splash screen")
-        frame = Image.new('1', (self.width, self.height), 0xFF)
+        frame = self.util.new_frame(self.util.MODE_4GRAY)
 
         # center text in display
-        size_x, size_y = self.logo_size_large
-        logo_coords = self.translate(
-            self.width / 2 - size_x / 2, self.height / 2 + size_y / 2)
-        self._draw_image(frame, "logo.png", logo_coords, (size_x, size_y))
+        sizeW, sizeH = self.logo_size_large
+        x = self.width / 2 - sizeW / 2
+        y = self.height / 2 + sizeH / 2
+        self.util.draw_image("logo.png", x, y, (sizeW, sizeH))
 
-        self.draw(frame, fast=True)
+        self.draw_to_display(frame)
         self.delay_ms(2000)
 
-    def draw_header(self, frame):
+    def draw_header(self):
         self.log.debug("Drawing header")
 
-        size = self.logo_size_small
-        logo_coords = self.translate(0, self.height)
-        self._draw_image(frame, "logo.png", logo_coords, size)
+        sizeW, sizeH = self.logo_size_small
+        x, y = (sizeW / 2, self.height - sizeH / 2)
+        self.util.draw_image("logo.png", x, y, (sizeW, sizeH))
 
-        draw = ImageDraw.Draw(frame)
-        start_x, start_y = self.translate(
-            self.margin_px, self.height - self.header_height)
-        end_x, end_y = self.translate(
-            self.width - self.margin_px, self.height - self.header_height)
-        draw.line((start_x, start_y, end_x, end_y), fill=0)
+        x, y = self.margin_px, self.height - self.header_height
+        x1, y1 = self.width - self.margin_px, self.height - self.header_height
+        self.util.draw_line(x, y, x1, y1)
 
-        font = self.text_tiny
         now = datetime.now()
-        dt_string = now.strftime("%d/%m/%Y %H:%M")
-        size_x, size_y = font.getsize(dt_string)
-        time_x, time_y = self.translate(
-            self.width - 10 - size_x, self.height - size_y / 2)
-        draw.text((time_x, time_y), dt_string, font=font, fill=0)
+        dt_txt = now.strftime("%d/%m/%Y %H:%M")
+        sizeW, sizeH = self.util.text_tiny.getsize(dt_txt)
+        x, y = self.width - sizeW / 2, self.height - sizeH
+        self.util.draw_text(self.util.text_tiny, dt_txt, x, y)
 
-    def draw_soil_moisture_data(self, frame, data):
-        self.log.debug("Drawing soil moisture data")
-        bmp_plant = 'plant.png'
-        bmp_plant_water = 'plant-water.png'
-        bmp_warning = 'warning.png'
-        bmp_start_y = self.height - self.header_height - 10
+    def draw_soil_moisture_data(self, data):
+        def draw_sensor_data(id, data, coords):
+            def percentage_angle_in_range(minAng, maxAng, val_percent):
+                return int(minAng + (maxAng - minAng) * (val_percent / 100))
 
-        for idx in range(len(data)):
-            sms_data = data[idx]
-            sms_value = sms_data["value"]
-            sms_water = sms_data["needs_water"]
-            sms_error = sms_data["error"]
+            sensor_val_percent = data["value"]
+            poor_water = data["needs_water"]
+            poor_water_percent = data["needs_water_threshold_percent"]
+            draw_value_text = False
+            value_text = str(sensor_val_percent) + "%"
+            warning = data["error"]
 
-            bmp_file = bmp_plant_water if sms_water else bmp_plant
-            if sms_error:
-                bmp_file = bmp_warning
+            font = self.util.text_tiny
+            coords_x, coords_y = coords
 
-            bmp_width, bmp_height = self.icon_size_small
-            bmp_x, bmp_y = self.translate(self.margin_px + bmp_width / 2, bmp_start_y - (
-                    idx * bmp_height * self.plant_bmp_margin_ratio))
+            sensor_icon = data["icon"]
+            water_icon = 'water.png'
+            dry_warning_icon = 'dry_warning.png'
+            warning_icon = 'warning.png'
 
-            self._draw_image(frame, bmp_file, (bmp_x, bmp_y), self.icon_size_small)
+            # plant icon params
+            icon_medW, _ = self.icon_size_large
+            iX, iY = self.util.round(coords_x, coords_y)
+            # get arc params
+            cX, cY = iX, iY
+            r = icon_medW / 1.5
+            # get angles in circle for water levels
+            min_ang = self.WATER_PERCENT_0_DEGREES
+            max_ang = self.WATER_PERCENT_100_DEGREES
 
+            poor_water_level_ang = percentage_angle_in_range(
+                min_ang, max_ang, poor_water_percent)
+            water_level_ang = percentage_angle_in_range(
+                min_ang, max_ang, sensor_val_percent)
+
+            if poor_water:
+                poor_water_level_ang = water_level_ang
+
+            # draw plant icon
+            self.util.draw_image(sensor_icon, iX, iY, self.icon_size_large)
+
+            if warning:
+                self.util.draw_image(warning_icon, iX, iY,
+                                     self.icon_size_small)
+            else:
+                # draw dry level
+                self.util.draw_dashed_arc(
+                    cX, cY, r, min_ang, poor_water_level_ang)
+                # draw water remaining
+                self.util.draw_arc(
+                    cX, cY, r, poor_water_level_ang, water_level_ang)
+                # get start point on arc to draw water level
+                sX, sY = self.util.point_on_circle(cX, cY, r, min_ang)
+                self.util.draw_circle(sX, sY, 3, fill='white')
+                # get end point on arc to draw water level
+                eX, eY = self.util.point_on_circle(cX, cY, r, max_ang)
+                self.util.draw_circle(eX, eY, 3, fill='white')
+                # water icon coords
+                wiX, wiY = self.util.point_on_circle(
+                    cX, cY, r, water_level_ang)
+
+                icon = water_icon if not poor_water else dry_warning_icon
+                self.util.draw_image(icon, wiX, wiY, self.icon_size_tiny)
 
             # draw sensor id
-            sms_id_str = str(idx + 1)
-            draw = ImageDraw.Draw(frame)
-            draw.text((bmp_x - 8, bmp_y + bmp_height / 2),
-                      sms_id_str, font=self.text_tiny, fill=0)
+            sensor_id = '#' + str(id)
+            tW, tH = font.getsize(sensor_id)
+            tX, tY = cX - r, cY + r
+            self.util.draw_text(font, sensor_id, tX, tY)
 
-            if not sms_error:
-                # draw moisture levels
-                num_display_dots = math.ceil(
-                    self.max_moisture_display_dots * (sms_value / 100))
+            if draw_value_text:
+                # draw percentage text
+                tW, tH = font.getsize(value_text)
+                tX, tY = iX - tW / 1.5, iY + tH / 2
+                self.util.draw_text(font, value_text, tX, tY)
 
-                dot_x = bmp_x + bmp_width + 10
-                dot_y = bmp_y + bmp_height / 2
+        def inverse_pyramid(x, y, colw, rowh, max_items, max_cols_per_row):
+            def chunks(lst, n):
+                """Yield successive n-sized chunks from lst."""
+                for i in range(0, len(lst), n):
+                    yield lst[i:i + n]
 
-                for idx in range(num_display_dots):
-                    dot_x = bmp_x + bmp_width + 10 + idx * 12
-                    self.draw_circle(frame, dot_x, dot_y, 2)
+            coords = []
+            items = range(0, max_items)
+            x, y = self.util.translate(x, y)
 
-    def draw_environment_data(self, frame, data):
+            row_idx = 0
+            for i in chunks(items, max_cols_per_row):
+                row_y = y + (row_idx * rowh)
+                col_start_x = x + (row_idx * (colw / 2))
+
+                col_idx = 0
+                for _ in i:
+                    col_x = col_start_x + colw * col_idx
+                    coords.append((col_x, row_y))
+
+                    col_idx += 1
+
+                row_idx += 1
+
+            return coords
+
+        self.log.debug("Drawing soil moisture data")
+
+        max_cols_per_row = 3
+        col_width = 140
+        row_height = 120
+        num_sensors = len(data)
+        sensor_ids = range(0, num_sensors)
+
+        x = self.width / 2 - col_width
+        y = self.height * 0.77
+        coords = inverse_pyramid(
+            x, y, col_width, row_height, num_sensors, max_cols_per_row)
+
+        for id in sensor_ids:
+            sensor_data = data[id]
+            draw_sensor_data(id, sensor_data, coords[id])
+
+    def draw_environment_data(self, data):
         self.log.debug("Drawing environment data")
-        origin_x, origin_y = self.translate(
+        origin_x, origin_y = self.util.translate(
             self.width * self.large_col_ratio, self.height - self.header_height - self.margin_px)
 
         display_vals = {
@@ -139,16 +204,19 @@ class EPaper:
 
         idx = 0
         for key, unit in display_vals.items():
-            bmp_file = key + ".png"
-            bmp_width, _ = self.icon_size_small
-            bmp_x = origin_x + self.margin_px
-            bmp_y = origin_y - self.header_height + 30 + (35 * idx)
-            self._draw_image(frame, bmp_file, (bmp_x, bmp_y), self.icon_size_small)
+            sensor_icon = key + ".png"
+            sensor_value_txt = str(data[key]) + unit
 
-            data_msg = str(data[key]) + unit
-            draw = ImageDraw.Draw(frame)
-            draw.text((bmp_x + bmp_width + self.margin_px, bmp_y + 2),
-                      data_msg, font=self.text_small, fill=0)
+            sizeW, sizeH = self.icon_size_small
+
+            x = origin_x + self.margin_px
+            y = origin_y - self.header_height + 30 + (35 * idx)
+
+            self.util.draw_image(sensor_icon, x, y, (sizeW, sizeH))
+
+            x, y = x + sizeW + self.margin_px, y + 2
+
+            self.util.draw_text(self.util.text_small, sensor_value_txt, x, y)
 
             idx += 1
 
@@ -157,43 +225,30 @@ class EPaper:
         enviroment_data = data["environment"]
         device_data = data["device"]
 
-        frame = Image.new('1', (self.width, self.height), 0xFF)
-       
-        self.draw_header(frame)
-        self.draw_soil_moisture_data(frame, soil_moisture_data)
-        # draw column
-        draw = ImageDraw.Draw(frame)
-        start_x, start_y = self.translate(
-            self.width * self.large_col_ratio, self.height - self.header_height - self.margin_px)
-        end_x, end_y = self.translate(
-            self.width * self.large_col_ratio, self.margin_px)
-        draw.line((start_x, start_y, end_x, end_y), fill=0)
+        self.flush()
+        # new display frame
+        self.util.new_frame(self.util.MODE_1GRAY)
 
-        self.draw_environment_data(frame, enviroment_data)
+        # draw data
+        self.draw_header()
+        self.draw_soil_moisture_data(soil_moisture_data)
+        # self.draw_environment_data(enviroment_data)
 
-        self.draw(frame, fast=True)
+        # draw frame display
+        frame = self.util.get_frame()
+        self.draw_to_display(frame)
 
-    def _draw_image(self, frame, filename, coords, size):
-        path = os.path.join(self.icondir, filename)
-        img = Image.open(path)
-        img.thumbnail(size, Image.ANTIALIAS)
-        frame.paste(img, coords)
-
-    def translate(self, x, y):
-        return (int(x), int(self.height - y))
-
-    def draw_circle(self, frame, x, y, r):
-        draw = ImageDraw.Draw(frame)
-        draw.ellipse([(x-r, y-r), (x+r, y+r)], fill=0, outline=0)
-
-    def draw(self, frame, fast=False):
-        gray_flag = 1 if fast else 0
-        self.epd.init(mode=gray_flag)
-        self.epd.clear(mode=gray_flag)
-        self.epd.display_frame(frame, mode=gray_flag)
+    def draw_to_display(self, frame):
+        if self.devmode:
+            frame.save("static/testframe.png")
+        else:
+            self.epd.init()
+            self.epd.clear()
+            self.epd.display(frame)
 
     def sleep(self):
-        self.epd.sleep()
+        if not self.devmode:
+            self.epd.sleep()
 
     def delay_ms(self, delaytime):
         time.sleep(delaytime / 1000.0)

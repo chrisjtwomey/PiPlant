@@ -24,9 +24,9 @@ class Sensor:
             self.log.warning(w)
         except GPIOZeroError as e:
             self.log.error('A GPIO Zero error occurred')
-            self.log.error(e)
+            self.log.exception(e)
         except Exception as e:
             self.log.error('An generic exception error has occurred')
-            self.log.error(e)
+            self.log.exception(e)
 
         return self._value

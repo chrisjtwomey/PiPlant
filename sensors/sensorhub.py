@@ -117,7 +117,7 @@ class SensorHub(Sensor):
 
         if status_func_reg & 0x08:
             msg = "Onboard brightness sensor failure"
-            errors.append(msg)
+            #errors.append(msg)
 
         if bmp280_func_reg == 1:
             msg = "Onboard barometer sensor failure"
