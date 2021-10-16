@@ -1,6 +1,7 @@
 
 import os
 import math
+import textwrap
 from PIL import Image, ImageFont, ImageDraw
 
 
@@ -15,21 +16,31 @@ class PILUtil:
         self.last_frame = None
         self.frame = None
 
+        self.text_size_tiny = 12
+        self.text_size_small = 16
+        self.text_size_medium = 20
+        self.text_size_large = 48
+        self.text_size_very_large = 64
+
+        self.icon_size_tiny = (18, 18)
+        self.icon_size_small = (24, 24)
+        self.icon_size_medium = (32, 32)
+        self.icon_size_large = (48, 48)
+        self.icon_size_very_large = (80, 80)
+        self.logo_size_small = (90, 18)
+        self.logo_size_large = (168, 60)
+
         self.icondir = os.path.join(os.path.dirname(
             os.path.dirname(os.path.realpath(__file__))), 'static', 'icon')
         self.fontdir = os.path.join(os.path.dirname(
             os.path.dirname(os.path.realpath(__file__))), 'static', 'font')
-        self.text_small = ImageFont.truetype(
-            '/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf', 24)
-        #self.text_tiny = ImageFont.truetype('/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf', 15)
-        self.text_tiny = ImageFont.truetype(
-            self.fontdir + '/Lobster-Regular.ttf', 16)
 
     def get_icon_path(self, filename):
         return os.path.join(self.icondir, filename)
 
-    def get_font_path(self, filename):
-        return os.path.join(self.fontdir, filename)
+    def get_font(self, name='Roboto', type='regular', size=24):
+        return ImageFont.truetype(
+            self.fontdir + '/{}-{}.ttf'.format(name, type.capitalize()), size)
 
     def new_frame(self, mode):
         if self.frame != None:
@@ -43,7 +54,7 @@ class PILUtil:
     def get_frame(self):
         frame = None
         if self.frame == None:
-           raise ValueError("No frame to get") 
+            raise ValueError("No frame to get")
 
         frame = self.frame
 
@@ -63,7 +74,7 @@ class PILUtil:
 
         return draw
 
-    def draw_image(self, filename, x, y, size):
+    def draw_image(self, filename, x, y, size, bgcolor='#FFF'):
         sizeW, sizeH = size
         coords = self.translate(x - sizeW / 2, y + sizeH / 2)
         path = self.get_icon_path(filename)
@@ -71,7 +82,7 @@ class PILUtil:
         img = Image.open(path).convert("RGBA")
         img.thumbnail(size, Image.ANTIALIAS)
 
-        background = Image.new('RGBA', img.size, (255, 255, 255))
+        background = Image.new('RGBA', img.size, bgcolor)
         alpha_composite = Image.alpha_composite(background, img)
 
         frame = self.get_frame()
@@ -85,12 +96,13 @@ class PILUtil:
         draw.line((x1, y1, x2, y2), fill, width)
         del draw
 
-    def draw_text(self, font, text, x, y):
-        sizeW, sizeH = font.getsize(text)
+    def draw_text(self, font, text, x, y, fill=0, align='left'):
+        draw = self.get_draw()
+        sizeW, sizeH = draw.textsize(text, font)
         x, y = self.translate(x - sizeW / 2, y + sizeH / 2)
 
-        draw = self.get_draw()
-        draw.text((x, y), text, font=font, fill=0)
+        #draw.text((x, y), text, font=font, fill=fill)
+        draw.multiline_text((x, y), text, font=font, fill=fill, align=align)
         del draw
 
     def draw_circle(self, x, y, r, fill=0, outline=0):
@@ -98,6 +110,19 @@ class PILUtil:
 
         draw = self.get_draw()
         draw.ellipse([(x-r, y-r), (x+r, y+r)], fill, outline)
+        del draw
+
+    def draw_rectangle(self, x, y, w, h, fill=0, outline=0, width=1, radius=0):
+        x, y = self.translate(x, y)
+        x1, y1 = x + w, y + h
+
+        draw = self.get_draw()
+        if radius > 0:
+            draw.rounded_rectangle(
+                [(x, y), (x1, y1)], radius=radius, fill=fill, outline=outline, width=width)
+        else:
+            draw.rectangle([(x, y), (x1, y1)], fill, outline, width)
+
         del draw
 
     def point_on_circle(self, x, y, r, ang):
@@ -110,7 +135,7 @@ class PILUtil:
 
         return (pX, pY)
 
-    def draw_arc(self, x, y, r, startAngle, endAngle, width=1):
+    def draw_arc(self, x, y, r, startAngle, endAngle, fill=0, width=1):
         x, y = self.translate(x, y)
 
         # get bounding box based on center point and radius
@@ -124,10 +149,10 @@ class PILUtil:
             return
 
         draw = self.get_draw()
-        draw.arc(bb, startAngle, endAngle, 'black', width=width)
+        draw.arc(bb, startAngle, endAngle, fill, width=width)
         del draw
 
-    def draw_dashed_arc(self, x, y, r, startAngle, endAngle, width=1, dash_length=4):
+    def draw_dashed_arc(self, x, y, r, startAngle, endAngle, fill = 0, width=1, dash_length=4):
         x, y = self.translate(x, y)
 
         # get bounding box based on center point and radius
@@ -153,11 +178,17 @@ class PILUtil:
 
         i = 0
         for theta in range(startAngle, endAngle, delta_angle):
-            color = 'black' if i % 2 != 0 else 'white'
+            color = fill if i % 2 != 0 else '#FFF'
             draw.arc(bb, theta, theta + delta_angle, color, width=width)
             i += 1
 
         del draw
+
+    def textsize(self, text, font):
+        draw = self.get_draw()
+        size = draw.textsize(text, font)
+        del draw
+        return size
 
     def translate(self, x, y):
         return self.round(x, self.height - y)
