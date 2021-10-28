@@ -147,7 +147,7 @@ class PiPlant(PolledSensor):
 
 if __name__ == '__main__':
     config = configparser.ConfigParser()
-    config.read('settings.conf')
+    config.read(os.path.join(cwd, 'settings.conf'))
 
     ppm = PiPlant(config)
 

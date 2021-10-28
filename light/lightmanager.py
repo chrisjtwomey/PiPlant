@@ -39,7 +39,7 @@ class LightManager:
         nowtime_naive = time.time()
         self._pir_detection_time = nowtime_naive
         self._power_transition_time = nowtime_naive
-        self._static_lights_refresh_time = nowtime_naive
+        self._static_lights_refresh_time = 0
         self._prev_livebody_detection = True # init PIR lights as on
 
         self._devicegroups = self.get_devicegroups()
