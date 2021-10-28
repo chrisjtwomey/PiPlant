@@ -1,9 +1,12 @@
 
 import os
 import math
-import textwrap
+import matplotlib.pyplot as plt
+import matplotlib.dates as md
+import numpy as np
+from matplotlib import font_manager
 from PIL import Image, ImageFont, ImageDraw
-
+import scipy.signal
 
 class PILUtil:
     MODE_1GRAY = '1'
@@ -34,6 +37,16 @@ class PILUtil:
             os.path.dirname(os.path.realpath(__file__))), 'static', 'icon')
         self.fontdir = os.path.join(os.path.dirname(
             os.path.dirname(os.path.realpath(__file__))), 'static', 'font')
+
+        font_files = font_manager.findSystemFonts(fontpaths=self.fontdir, fontext='ttf')
+
+        for font_file in font_files:
+            font_manager.fontManager.addfont(font_file)
+
+        # set font
+        plt.rcParams['font.family'] = 'Roboto'
+        plt.rcParams['font.size'] = 5
+
 
     def get_icon_path(self, filename):
         return os.path.join(self.icondir, filename)
@@ -87,6 +100,15 @@ class PILUtil:
 
         frame = self.get_frame()
         frame.paste(alpha_composite, coords)
+
+    def draw_image_obj(self, img, x, y, size):
+        sizeW, sizeH = size
+        coords = self.translate(x - sizeW / 2, y + sizeH / 2)
+ 
+        img.thumbnail(size, Image.ANTIALIAS)
+
+        frame = self.get_frame()
+        frame.paste(img, coords)
 
     def draw_line(self, x1, y1, x2, y2, fill=0, width=1):
         x1, y1 = self.translate(x1, y1)
@@ -184,6 +206,35 @@ class PILUtil:
 
         del draw
 
+    def draw_linechart(self, data, x, y, w, h, dpi=150):
+        canvas_size = self._calc_fig_size(w, h, 150)
+        fig = plt.figure(
+            constrained_layout=True,
+            figsize=canvas_size,
+            dpi=dpi
+        )
+
+        series = data["series"]
+        
+        for line in series:
+            px = line["axis"]["x"]
+            py = line["axis"]["y"]
+
+            py = scipy.signal.savgol_filter(py, len(px) -1, 4)
+
+            plt.plot(px, py, linewidth=0.5)    
+
+        ax=plt.gca()
+        xfmt = md.DateFormatter('%a')
+        ax.xaxis.set_major_formatter(xfmt)
+        ax.spines['top'].set_visible(False)
+        ax.spines['right'].set_visible(False)
+        ax.set_ylim([0, 100])
+
+        fig.canvas.draw()
+        plotimg = Image.frombytes('RGB', fig.canvas.get_width_height(),fig.canvas.tostring_rgb())
+        self.draw_image_obj(plotimg, x, y, (w, h))
+
     def textsize(self, text, font):
         draw = self.get_draw()
         size = draw.textsize(text, font)
@@ -195,3 +246,6 @@ class PILUtil:
 
     def round(self, x, y):
         return int(x), int(y)
+
+    def _calc_fig_size(self, w, h, dpi):
+        return w / dpi, h / dpi

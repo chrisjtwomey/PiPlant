@@ -18,12 +18,12 @@ class EPaper:
     HOURS_IN_DAY = 24
     HOURS_IN_WEEK = 168
 
-    def __init__(self):
+    def __init__(self, config):
         self.log = logging.getLogger("e-Paper")
         self.log.debug("Initializing...")
 
         # write display to file and don't sent to e-Paper
-        self.devmode = True
+        self.devmode = config.getboolean('dev_mode')
 
         self.epd = EPD()
         self.width = self.epd.height
@@ -264,8 +264,66 @@ class EPaper:
         x = init_x + sensor_margin * 3
         draw_sensor_data(icon, data_key, sensor_unit_txt, x, inside_row_y)
 
-    def draw_historical_data(hours):
-        return None
+    def draw_historical_data(self, hours):
+        testdata = {
+            "series": [
+                {
+                    "id": "1",
+                    "axis": {
+                        "x": [
+                            "1634387352",
+                            "1634300952",
+                            "1634214552",
+                            "1634128152",
+                            "1634041752",
+                            "1633955352",  
+                        ],
+                        "y": [
+                            97,
+                            40,
+                            85,
+                            59,
+                            75,
+                            25, 
+                        ]
+                    }
+                },
+                {
+                    "id": "2",
+                    "axis": {
+                        "x": [
+                            "1634387352",
+                            "1634300952",
+                            "1634214552",
+                            "1634128152",
+                            "1634041752",
+                            "1633955352",  
+                        ],
+                        "y": [
+                            90,
+                            32,
+                            25,
+                            80,
+                            95,
+                            10, 
+                        ]
+                    }
+                }
+            ]
+        }
+        graphdata = {
+            "series": []
+        }
+
+        hours_ago_epoch_time = datetime.date.today() - datetime.timedelta()
+
+        w = 400
+        h = 200
+
+        x = 240
+        y = 150
+
+        self.util.draw_linechart(testdata, x, y, w, h)
 
     def draw_data(self, data):
         soil_moisture_data = data["soil_moisture"]
@@ -273,7 +331,8 @@ class EPaper:
         device_data = data["device"]
 
         #step = self.STEP_SOIL_MOISTURE
-        step = self.STEP_ENVIRONMENT
+        #step = self.STEP_ENVIRONMENT
+        step = self.STEP_7DAY_HISTORICAL
 
         self.flush()
         # new display frame
@@ -299,6 +358,7 @@ class EPaper:
         self.draw_to_display(frame)
 
         # steps = [
+        #     self.STEP_SOIL_MOISTURE
         #     self.STEP_ENVIRONMENT,
         #     self.STEP_24HR_HISTORICAL,
         #     self.STEP_7DAY_HISTORICAL,
