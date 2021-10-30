@@ -330,9 +330,9 @@ class EPaper:
         enviroment_data = data["environment"]
         device_data = data["device"]
 
-        #step = self.STEP_SOIL_MOISTURE
+        step = self.STEP_SOIL_MOISTURE
         #step = self.STEP_ENVIRONMENT
-        step = self.STEP_7DAY_HISTORICAL
+        #step = self.STEP_7DAY_HISTORICAL
 
         self.flush()
         # new display frame
