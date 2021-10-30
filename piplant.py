@@ -12,7 +12,7 @@ from sensors.soilmoisture import SoilMoistureSensor
 from sensors.profile import *
 
 cwd = os.path.dirname(os.path.realpath(__file__))
-logging.config.fileConfig(os.path.join(cwd, 'logging.dev.ini'))
+logging.config.fileConfig(os.path.join(cwd, 'logging.ini'))
 
 
 class PiPlant(PolledSensor):

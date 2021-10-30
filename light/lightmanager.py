@@ -13,8 +13,9 @@ from astral.sun import sun
 class LightManager:
     CORNER_LAMP_GROUP_NAME = "LIGHTMANAGER_DEVICE_GROUP_CORNER_LAMP"
     DESK_LAMP_GROUP_NAME = "LIGHTMANAGER_DEVICE_GROUP_DESK_LAMP"
-    CACHE_REFRESH_TIMEOUT_SECONDS = 120
-    DEVICES_OFF_TIMEOUT_SECONDS = 120
+    DEFAULT_CACHE_REFRESH_TIMEOUT = 120
+    DEFAULT_DEVICE_OFF_TIMEOUT = 120
+    DEFAULT_STATIC_LIGHT_HOURS = 16
 
     GEO_DEFAULT_CITY = "Dublin"
     GEO_DEFAULT_TZ = "UTC"
@@ -34,12 +35,13 @@ class LightManager:
         ) if "geo_tz" in managerconf else self.GEO_DEFAULT_TZ
         self.geocity = lookup(city_loc_name, database())
 
-        self._light_hours = managerconf.getint("static_light_hours")
+        self._light_hours = managerconf.getint("static_light_hours") if "static_light_hours" in managerconf else self.DEFAULT_STATIC_LIGHT_HOURS
+        self._cache_refresh_timeout = managerconf.getint("device_query_interval_seconds") if "device_query_interval_seconds" in managerconf else self.DEFAULT_CACHE_REFRESH_TIMEOUT
+        self._device_off_timeout = managerconf.getint("motion_device_off_timeout_seconds") if "motion_device_off_timeout_seconds" in managerconf else self.DEFAULT_DEVICE_OFF_TIMEOUT
 
         nowtime_naive = time.time()
-        self._power_transition_time = nowtime_naive
+        self._pir_detection_time = nowtime_naive
         self._static_lights_refresh_time = 0
-        self._prev_livebody_detection = True  # init PIR lights as on
 
         self._devicegroups = self.get_devicegroups()
         self._state_cache = self._init_state_cache(self._devicegroups)
@@ -139,25 +141,25 @@ class LightManager:
                 # set all devices on
                 self.set_devices_power_state(
                     pir_controlled_light_groups, True)
-                self._power_transition_time = nowtime_naive
+            self._pir_detection_time = nowtime_naive
 
         if not livebody_detection:
             # are we on longer than we should without detecting anybody?
-            time_since_transition = math.ceil(
-                nowtime_naive - self._power_transition_time)
+            time_since_detection = math.ceil(
+                nowtime_naive - self._pir_detection_time)
 
-            if time_since_transition >= self.DEVICES_OFF_TIMEOUT_SECONDS:
+            if time_since_detection >= self._device_off_timeout:
                 states = self.get_devices_power_state(
                     pir_controlled_light_groups)
                 # are any on?
                 if any(states):
                     self.log.debug("No PIR motion detected for {} seconds for groups {}".format(
-                        self.DEVICES_OFF_TIMEOUT_SECONDS, pir_controlled_light_groups))
+                        self._device_off_timeout, pir_controlled_light_groups))
                     # set all devices off
                     self.set_devices_power_state(
                         pir_controlled_light_groups, False)
-                    self._power_transition_time = nowtime_naive
 
+        
     def update_state_cache(self, device, power_state):
         nowtime_naive = time.time()
         self._state_cache[device.mac_addr] = (nowtime_naive, power_state)
@@ -180,7 +182,7 @@ class LightManager:
             refresh_time, power_state = self._state_cache[device.mac_addr]
             time_since_update = math.ceil(nowtime_naive - refresh_time)
 
-            if not use_local_state or time_since_update > self.CACHE_REFRESH_TIMEOUT_SECONDS:
+            if not use_local_state or time_since_update > self._cache_refresh_timeout:
                 self.log.info("Querying device {}:{} for power state...".format(
                     device.mac_addr, device.ip_addr))
                 try:
