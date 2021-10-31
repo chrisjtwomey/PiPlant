@@ -35,9 +35,12 @@ class LightManager:
         ) if "geo_tz" in managerconf else self.GEO_DEFAULT_TZ
         self.geocity = lookup(city_loc_name, database())
 
-        self._light_hours = managerconf.getint("static_light_hours") if "static_light_hours" in managerconf else self.DEFAULT_STATIC_LIGHT_HOURS
-        self._cache_refresh_timeout = managerconf.getint("device_query_interval_seconds") if "device_query_interval_seconds" in managerconf else self.DEFAULT_CACHE_REFRESH_TIMEOUT
-        self._device_off_timeout = managerconf.getint("motion_device_off_timeout_seconds") if "motion_device_off_timeout_seconds" in managerconf else self.DEFAULT_DEVICE_OFF_TIMEOUT
+        self._light_hours = managerconf.getint(
+            "static_light_hours") if "static_light_hours" in managerconf else self.DEFAULT_STATIC_LIGHT_HOURS
+        self._cache_refresh_timeout = managerconf.getint(
+            "device_query_interval_seconds") if "device_query_interval_seconds" in managerconf else self.DEFAULT_CACHE_REFRESH_TIMEOUT
+        self._device_off_timeout = managerconf.getint(
+            "motion_device_off_timeout_seconds") if "motion_device_off_timeout_seconds" in managerconf else self.DEFAULT_DEVICE_OFF_TIMEOUT
 
         nowtime_naive = time.time()
         self._pir_detection_time = nowtime_naive
@@ -91,6 +94,7 @@ class LightManager:
         midnight_today = datetime.datetime.combine(
             today, datetime.datetime.min.time())
         midnight_tmrw = midnight_today + datetime.timedelta(days=1)
+        midnight_tmrw = midnight_tmrw.replace(tzinfo=tzinfo)
 
         sunphases = sun(observer, date=today, tzinfo=tz)
 
@@ -104,6 +108,7 @@ class LightManager:
         pir_controlled_light_groups = []
 
         if nowdate_tzaware < static_lights_on_dt:
+            print("between midnight and dawn")
             # between midnight and dawn
             # static lights stay off
             # ambient lights activated by PIR
@@ -159,7 +164,6 @@ class LightManager:
                     self.set_devices_power_state(
                         pir_controlled_light_groups, False)
 
-        
     def update_state_cache(self, device, power_state):
         nowtime_naive = time.time()
         self._state_cache[device.mac_addr] = (nowtime_naive, power_state)
