@@ -1,9 +1,10 @@
 import time
 import logging
+import util.utils as utils
 
 from datetime import datetime
 from rpi_epd3in7.epd import EPD
-from .util import PILUtil
+from .pil import PILUtil
 
 
 class EPaper:
@@ -23,7 +24,7 @@ class EPaper:
         self.log.debug("Initializing...")
 
         # write display to file and don't sent to e-Paper
-        self.devmode = config.getboolean('dev_mode')
+        self.devmode = utils.dehumanize(config["dev_mode"])
 
         self.epd = EPD()
         self.width = self.epd.height

@@ -1,0 +1,73 @@
+---
+piplant:
+  poll_interval: 5s
+  render_interval: 1hr
+  skip_splash_screen: false
+display:
+  enabled: false
+  dev_mode: false
+lightmanager:
+  autodiscovery: disabled
+  device_groups:
+    - corner_lamp:
+      - mac: d0:73:d5:6d:8f:b1
+        ip: 192.168.1.27 
+    - desk_lamp:
+      - mac: d0:73:d5:6b:cc:29
+        ip: 192.168.1.28
+      - mac: d0:73:d5:6D:59:2d
+        ip: 192.168.1.29 
+      - mac: d0:73:d5:6a:12:7a
+        ip: 192.168.1.30
+      - mac: d0:73:d5:6b:61:51
+        ip: 192.168.1.39
+  motion_activated_device_groups:
+    - corner_lamp
+  schedules:
+    - name: sleep
+      time: "00:00"
+      hsbk:
+        brightness: 0%
+        kelvin: 2000
+      device_groups:
+        - desk_lamp
+    - name: wakeup
+      time: "07:30"
+      hsbk:
+        kelvin: 2000
+        brightness: 80%
+      device_groups:
+        - desk_lamp
+    - name: daytime
+      time: "08:00"
+      hsbk:
+        brightness: 100%
+        kelvin: 5000
+      device_groups:
+        - desk_lamp
+    - name: evening
+      time: "20:00"
+      hsbk:
+        brightness: 80%
+        kelvin: 3000
+      device_groups:
+        - desk_lamp
+    - name: nightlight
+      time: "21:00"
+      hsbk:
+        brightness: 65%
+        kelvin: 2500
+      device_groups:
+        - desk_lamp
+    - name: sleep
+      time: "23:00"
+      hsbk:
+        brightness: 0%
+        kelvin: 2000
+      device_groups:
+        - desk_lamp
+  geo_city: "Dublin"
+  device_query_interval: 2m
+  motion_device_on_timeout: 5m
+
+

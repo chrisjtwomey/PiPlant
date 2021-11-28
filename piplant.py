@@ -1,8 +1,10 @@
 import os
+import re
+import yaml
 import math
 import time
-import configparser
 import logging.config
+import util.utils as utils
 from light.lightmanager import LightManager
 from display.epaper import EPaper
 from sensors.polledsensor import PolledSensor
@@ -12,29 +14,19 @@ from sensors.soilmoisture import SoilMoistureSensor
 from sensors.profile import *
 
 cwd = os.path.dirname(os.path.realpath(__file__))
-logging.config.fileConfig(os.path.join(cwd, 'logging.ini'))
+logging.config.fileConfig(os.path.join(cwd, 'logging.dev.ini'))
 
 
 class PiPlant(PolledSensor):
 
     def __init__(self, config):
-        piplantconf = config['PIPLANT']
-        self._poll_interval_seconds = piplantconf.getint(
-            'poll_interval_seconds')
+        piplantconf = config["piplant"]
+        self._poll_interval_seconds = utils.dehumanize(piplantconf["poll_interval"])
+        self._render_interval_seconds = utils.dehumanize(piplantconf["render_interval"])
         self._process_time = 0
-        self._render_interval_seconds = piplantconf.getint(
-            'render_interval_seconds')
         self._render_time = 0
 
-        self._displayconf = config['EPAPER_DISPLAY']
-        self._lightmanager_managerconf = config['LIGHTMANAGER']
-        self._lightmanager_discoveryconf = config['LIGHTMANAGER_AUTODISCOVERY']
-        self._lightmanager_groupsconf = []
-        for section in config:
-            if "LIGHTMANAGER_DEVICE_GROUP" in section:
-                self._lightmanager_groupsconf.append((section, config[section]))
-
-        skip_splash_screen = piplantconf.getboolean('skip_splash_screen')
+        skip_splash_screen = utils.dehumanize(piplantconf["skip_splash_screen"])
 
         super().__init__(self._poll_interval_seconds)
 
@@ -74,15 +66,17 @@ class PiPlant(PolledSensor):
 
         # processors
         self.log.info("Initializing processors...")
-        self.lifxmanager = LightManager(
-            self._lightmanager_discoveryconf, self._lightmanager_managerconf, self._lightmanager_groupsconf)
+        lmconf = config["lightmanager"]
+        self.lifxmanager = LightManager(lmconf)
         self.log.info("Processors initialized")
 
         # renderers
         self.log.info("Initializing display...")
+        dconf = config["display"]
+        self._display_enabled =  utils.dehumanize(dconf["enabled"])
 
-        if self._displayconf.getboolean('enabled'):
-            self.display = EPaper(self._displayconf)
+        if self._display_enabled:
+            self.display = EPaper(dconf)
             if not skip_splash_screen:
                 self.display.draw_splash_screen()
             self.log.info("Display initialized")
@@ -132,7 +126,7 @@ class PiPlant(PolledSensor):
             self.log.info("Rendering data...")
             data = self._value
 
-            if self._displayconf.getboolean('enabled'):
+            if self._display_enabled:
                 self.display.draw_data(data)
                 self.display.sleep()
 
@@ -146,13 +140,13 @@ class PiPlant(PolledSensor):
 
 
 if __name__ == '__main__':
-    config = configparser.ConfigParser()
-    config.read(os.path.join(cwd, 'settings.conf'))
+    cfg_path = os.path.join(cwd, 'config.yaml')
+    with open(cfg_path, "r") as fs:
+        config = yaml.safe_load(fs)
+        ppm = PiPlant(config)
 
-    ppm = PiPlant(config)
-
-    while True:
-        data = ppm.value
-        ppm.process(data)
-        ppm.render()
-        ppm.poll_pause()
+        while True:
+            data = ppm.value
+            ppm.process(data)
+            ppm.render()
+            ppm.poll_pause()
