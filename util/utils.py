@@ -1,4 +1,7 @@
 import re
+import datetime
+from dateutil import parser
+import pytz
 
 def dehumanize(human_str):
     # ensure str
@@ -52,3 +55,14 @@ def _dehumanize_boolean(boolean_str):
         return False
     else:
         raise ValueError("Unable to parse boolean: {}".format(boolean_str))
+
+def hour_to_datetime(hour_str, tz = None):  
+    nowdate = datetime.datetime.now(tz=tz)
+
+    nowdate_str = nowdate.strftime('%d/%m/%Y')
+    nowdatetime_str = nowdate_str + " " + hour_str
+    
+    dt = datetime.datetime.strptime(nowdatetime_str, '%d/%m/%Y %H:%M')
+    dt_aware = pytz.utc.localize(dt)
+
+    return dt_aware

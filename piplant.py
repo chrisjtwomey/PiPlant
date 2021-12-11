@@ -4,8 +4,9 @@ import yaml
 import math
 import time
 import logging.config
+from light.lifxlivebodydetection import LIFXLiveBodyDetection
 import util.utils as utils
-from light.lightmanager import LightManager
+from light.lifxschedulemanager import LIFXScheduleManager
 from display.epaper import EPaper
 from sensors.polledsensor import PolledSensor
 from sensors.devicestatistics import DeviceStatistics
@@ -66,8 +67,10 @@ class PiPlant(PolledSensor):
 
         # processors
         self.log.info("Initializing processors...")
+        # TODO: check type of manager
         lmconf = config["lightmanager"]
-        self.lifxmanager = LightManager(lmconf)
+        self.schedulemanager = LIFXScheduleManager(lmconf)
+        self.livebodydetection = LIFXLiveBodyDetection(lmconf)
         self.log.info("Processors initialized")
 
         # renderers
@@ -110,8 +113,10 @@ class PiPlant(PolledSensor):
 
         data = self._value
         env_data = data["environment"]
+        livebody_detection = env_data["livebody_detection"]
 
-        self.lifxmanager.process_sensor_data(env_data)
+        self.schedulemanager.process()
+        self.livebodydetection.process(livebody_detection)
         self._process_time = time.time()
 
         # save to db

@@ -8,10 +8,15 @@ display:
   dev_mode: false
 lightmanager:
   autodiscovery: disabled
+  geo_city: "Dublin"
+  device_query_interval: 2m
+  device_type: lifx
   device_groups:
-    - corner_lamp:
+    - motion_lights:
       - mac: d0:73:d5:6d:8f:b1
-        ip: 192.168.1.27 
+        ip: 192.168.1.27
+      - mac: d0:73:d5:43:c8:eb
+        ip: 192.168.1.40 
     - desk_lamp:
       - mac: d0:73:d5:6b:cc:29
         ip: 192.168.1.28
@@ -21,8 +26,10 @@ lightmanager:
         ip: 192.168.1.30
       - mac: d0:73:d5:6b:61:51
         ip: 192.168.1.39
-  motion_activated_device_groups:
-    - corner_lamp
+  livebody_detection:
+    timeout: 2m
+    groups:
+      - motion_lights
   schedules:
     - name: sleep
       time: "00:00"
@@ -33,6 +40,7 @@ lightmanager:
         - desk_lamp
     - name: wakeup
       time: "07:30"
+      transition: 15m
       hsbk:
         kelvin: 2000
         brightness: 80%
@@ -40,6 +48,7 @@ lightmanager:
         - desk_lamp
     - name: daytime
       time: "08:00"
+      transition: 10m
       hsbk:
         brightness: 100%
         kelvin: 5000
@@ -47,6 +56,7 @@ lightmanager:
         - desk_lamp
     - name: evening
       time: "20:00"
+      transition: 30m
       hsbk:
         brightness: 80%
         kelvin: 3000
@@ -54,6 +64,7 @@ lightmanager:
         - desk_lamp
     - name: nightlight
       time: "21:00"
+      transition: 10m
       hsbk:
         brightness: 65%
         kelvin: 2500
@@ -61,13 +72,9 @@ lightmanager:
         - desk_lamp
     - name: sleep
       time: "23:00"
+      transition: 1m
       hsbk:
         brightness: 0%
         kelvin: 2000
       device_groups:
         - desk_lamp
-  geo_city: "Dublin"
-  device_query_interval: 2m
-  motion_device_on_timeout: 5m
-
-
