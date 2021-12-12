@@ -58,7 +58,7 @@ class LIFXScheduleManager(ScheduleManager):
         try:
             devices = devicegroup.get_device_list()
             for device in devices:
-                self.log.info("Querying device for HSBK...\n\tMAC: {}\n\tIP: {}".format(device.mac_addr, device.ip_addr))
+                self.log.debug("Querying device for HSBK...\n\tMAC: {}\n\tIP: {}".format(device.mac_addr, device.ip_addr))
 
                 hsbk = device.get_color()
                 hsbks.append(hsbk)
@@ -77,7 +77,7 @@ class LIFXScheduleManager(ScheduleManager):
         try:
             devices = devicegroup.get_device_list()
             for device in devices:
-                self.log.info("Querying device for power...\n\tMAC: {}\n\tIP: {}".format(device.mac_addr, device.ip_addr))
+                self.log.debug("Querying device for power...\n\tMAC: {}\n\tIP: {}".format(device.mac_addr, device.ip_addr))
 
                 power = device.get_power() > 0
                 powers.append(power)
@@ -85,7 +85,7 @@ class LIFXScheduleManager(ScheduleManager):
             # catch exception here as we don't want to stop on
             # communication errors
             self.log.error(
-                'Error occurred communicating with LIFX lights')
+                'Error occurred communicating with devicegroup')
             raise e
 
         return powers
@@ -103,7 +103,7 @@ class LIFXScheduleManager(ScheduleManager):
 
     def set_devicegroup_hsbk(self, devicegroup, hsbk, transition_seconds=0):
         transition_ms = int(transition_seconds * 1000)
-        self.log.debug("Setting HSBK for LIFX device group:\n\tHSBK: {0}".format(hsbk))
+        self.log.debug("Setting HSBK for device group:\n\tHSBK: {0}".format(hsbk))
         if transition_seconds > 0:
             self.log.debug("HSBK transition time:\n\t{} seconds".format(transition_seconds))
 
@@ -114,5 +114,5 @@ class LIFXScheduleManager(ScheduleManager):
             # catch exception here as we don't want to stop on
             # communication errors
             self.log.error(
-                'Error occurred communicating with LIFX lights')
+                'Error occurred communicating with devicegroup')
             raise e

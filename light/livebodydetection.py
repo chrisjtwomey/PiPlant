@@ -26,6 +26,8 @@ class LiveBodyDetection:
         else:
             self._devicegroups = self._get_device_groups_from_config(config["device_groups"])
 
+        self.log.info("Livebody detection initialized")
+
     def _autodiscover_devicegroup(self):
         self.log.warning("autodiscover_devicegroups_from_config not implemented!")
         pass

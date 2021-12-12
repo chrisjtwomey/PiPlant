@@ -27,7 +27,7 @@ lightmanager:
       - mac: d0:73:d5:6b:61:51
         ip: 192.168.1.39
   livebody_detection:
-    timeout: 2m
+    timeout: 5m
     groups:
       - motion_lights
   schedules:
@@ -56,10 +56,10 @@ lightmanager:
         - desk_lamp
     - name: evening
       time: "20:00"
-      transition: 30m
+      transition: 5h
       hsbk:
         brightness: 80%
-        kelvin: 3000
+        kelvin: 3500
       device_groups:
         - desk_lamp
     - name: nightlight
@@ -67,7 +67,7 @@ lightmanager:
       transition: 10m
       hsbk:
         brightness: 65%
-        kelvin: 2500
+        kelvin: 2750
       device_groups:
         - desk_lamp
     - name: sleep

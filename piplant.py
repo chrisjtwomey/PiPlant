@@ -15,7 +15,7 @@ from sensors.soilmoisture import SoilMoistureSensor
 from sensors.profile import *
 
 cwd = os.path.dirname(os.path.realpath(__file__))
-logging.config.fileConfig(os.path.join(cwd, 'logging.dev.ini'))
+logging.config.fileConfig(os.path.join(cwd, 'logging.ini'))
 
 
 class PiPlant(PolledSensor):
@@ -90,7 +90,7 @@ class PiPlant(PolledSensor):
             self._poll_interval_seconds))
 
     def get_value(self):
-        self.log.info("Fetching data...")
+        self.log.info("Fetching...")
 
         soil_moisture_data = dict()
         for sensor in self.soil_moisture_sensors:
@@ -104,12 +104,11 @@ class PiPlant(PolledSensor):
             "environment": sensorhub_data,
             "device": boardstats_data,
         }
-        self.log.info("Fetch finished")
 
         return data_payload
 
     def process(self, data):
-        self.log.info("Processing data...")
+        self.log.info("Processing...")
 
         data = self._value
         env_data = data["environment"]
@@ -121,21 +120,19 @@ class PiPlant(PolledSensor):
 
         # save to db
         # print(data)
-        self.log.info("Processing finished")
         return None
 
     def render(self,):
         now = time.time()
         # if time to render
         if math.ceil(now - self._render_time) >= self._render_interval_seconds:
-            self.log.info("Rendering data...")
+            self.log.info("Rendering...")
             data = self._value
 
             if self._display_enabled:
                 self.display.draw_data(data)
                 self.display.sleep()
 
-            self.log.info("Rendering finished")
             self._render_time = time.time()
 
     def poll_pause(self):

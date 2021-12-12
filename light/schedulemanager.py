@@ -36,6 +36,8 @@ class ScheduleManager:
         self._init_state_cache(self._devicegroups)
         self._get_devicegroup_state()
 
+        self.log.info("Schedule Manager initialized")
+
     def get_tzinfo(self):
         return self.geocity.tzinfo
 
@@ -91,6 +93,7 @@ class ScheduleManager:
         
         for group_name, group_state in group_states.items():
             if current_schedule != group_state["current_schedule"]:
+                self.log.info("Light schedule changed - {}".format(current_schedule["name"]))
                 group_state["current_schedule"] = current_schedule
                 self._set_devicegroup_hsbk(hsbk, group_names=[group_name], transition_seconds=transition_seconds)
                 self._state_cache[group_name] = group_state
@@ -165,7 +168,7 @@ class ScheduleManager:
                     self.log.error('An error has occurred')
                     self.log.exception(e)
 
-            self.log.debug("LIFX device state for group {}: {}".format(group_name, group_state))
+            self.log.debug("State for group {}: {}".format(group_name, group_state))
             group_states[group_name] = group_state
 
         return group_states
