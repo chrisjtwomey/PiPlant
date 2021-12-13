@@ -28,7 +28,17 @@ lightmanager:
         ip: 192.168.1.39
   livebody_detection:
     timeout: 5m
-    groups:
+    on_motion_trigger:
+      transition: 0s
+      hsbk:
+        brightness: 45%
+        kelvin: 3000
+    on_motion_timeout:
+      transition: 5s
+      hsbk:
+        brightness: 0%
+        kelvin: 3000
+    device_groups:
       - motion_lights
   schedules:
     - name: sleep
@@ -42,8 +52,8 @@ lightmanager:
       time: "07:30"
       transition: 15m
       hsbk:
-        kelvin: 2000
         brightness: 80%
+        kelvin: 2000
       device_groups:
         - desk_lamp
     - name: daytime

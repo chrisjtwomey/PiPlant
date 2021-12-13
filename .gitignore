@@ -80,7 +80,8 @@ venv.bak/
 static/testframe.png
 
 # Debug
-*.log.*
+*.log
+piplant.log.*
 
 # Vscode
 workspace.code-workspace

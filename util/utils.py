@@ -66,3 +66,18 @@ def hour_to_datetime(hour_str, tz = None):
     dt_aware = pytz.utc.localize(dt)
 
     return dt_aware
+
+def parse_hsbk_map(hsbk_map, max_value = 65535):   
+    hue = hsbk_map["hue"] if "hue" in hsbk_map else 0
+    sat = hsbk_map["saturation"] if "saturation" in hsbk_map else 0
+    brightness_raw = hsbk_map["brightness"] if "brightness" in hsbk_map else "0"
+    kelvin = hsbk_map["kelvin"] if "kelvin" in hsbk_map else 0
+
+    if "%" in brightness_raw:
+        brightness = int(max_value / 100 * int(brightness_raw.split("%")[0]))
+    else:
+        brightness = int(brightness_raw) 
+
+    hsbk = [hue, sat, brightness, kelvin]
+
+    return hsbk
