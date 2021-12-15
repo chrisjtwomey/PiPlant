@@ -19,12 +19,12 @@ class EPaper:
     HOURS_IN_DAY = 24
     HOURS_IN_WEEK = 168
 
-    def __init__(self, config):
+    def __init__(self, config, devmode):
         self.log = logging.getLogger("e-Paper")
         self.log.debug("Initializing...")
 
         # write display to file and don't sent to e-Paper
-        self.devmode = utils.dehumanize(config["dev_mode"])
+        self.devmode = devmode
 
         self.epd = EPD()
         self.width = self.epd.height

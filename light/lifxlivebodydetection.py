@@ -4,9 +4,9 @@ from .devicegroup import lifx
 from .livebodydetection import LiveBodyDetection
 
 class LIFXLiveBodyDetection(LiveBodyDetection):
-    def __init__(self, config):
+    def __init__(self, config, devmode):
         self.log = logging.getLogger(self.__class__.__name__)
-        super().__init__(config)
+        super().__init__(config, devmode)
 
     def on_motion(self, devicegroup, hsbk, transition_seconds=0):
         _, _, brightness, _ = hsbk

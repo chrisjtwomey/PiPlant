@@ -12,8 +12,9 @@ class LiveBodyDetection:
     DEFAULT_MOTION_TIMEOUT = 30
     DEFAULT_TRANSITION_SECONDS = 0
 
-    def __init__(self, config):
+    def __init__(self, config, devmode):
         self.log = logging.getLogger(self.__class__.__name__)
+        self.devmode = devmode
 
         lbd_conf = config["livebody_detection"]
 
@@ -40,10 +41,16 @@ class LiveBodyDetection:
                 self._on_motion_timeout_transition = utils.dehumanize(lbd_conf["on_motion_timeout"]["transition"])
 
         discovery_enabled = utils.dehumanize(config["autodiscovery"])
+        devicegroups = dict()
+        self._devicegroups = devicegroups
         if discovery_enabled:
-            self._devicegroups = self._autodiscover_devicegroup()
+            devicegroups = self._autodiscover_devicegroup()
         else:
-            self._devicegroups = self._get_device_groups_from_config(config["device_groups"])
+            devicegroups = self._get_device_groups_from_config(config["device_groups"])
+        
+        for group_name, group in devicegroups.items():
+            if group_name in self._motion_group_names:
+                self._devicegroups[group_name] = group
 
         self.log.info("Livebody detection initialized")
 
@@ -87,7 +94,9 @@ class LiveBodyDetection:
         nowtime_naive = time.time()
         if livebody_detection:
             for group_name, devicegroup in self._devicegroups.items():
-                if group_name in self._motion_group_names:
+                if self.devmode:
+                    self.log.debug("on_motion_trigger:\n\tdevicegroup: {}\n\tHSBK: {}\n\ttransition_seconds: {}".format(group_name, self._on_motion_trigger_hsbk, self._on_motion_timeout_transition))
+                else:
                     self.on_motion_trigger(devicegroup, self._on_motion_trigger_hsbk, transition_seconds=self._on_motion_trigger_transition)
             self._pir_detection_time = nowtime_naive
         else:
@@ -96,5 +105,7 @@ class LiveBodyDetection:
 
             if time_since_detection >= self._motion_timeout_seconds:
                 for group_name, devicegroup in self._devicegroups.items():
-                    if group_name in self._motion_group_names:
+                    if self.devmode:
+                        self.log.debug("on_motion_timeout:\n\tdevicegroup: {}\n\tHSBK: {}\n\ttransition_seconds: {}".format(group_name, self._on_motion_trigger_hsbk, self._on_motion_timeout_transition))
+                    else:
                         self.on_motion_timeout(devicegroup, self._on_motion_timeout_hsbk, transition_seconds=self._on_motion_timeout_transition)

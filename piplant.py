@@ -15,13 +15,19 @@ from sensors.soilmoisture import SoilMoistureSensor
 from sensors.profile import *
 
 cwd = os.path.dirname(os.path.realpath(__file__))
-logging.config.fileConfig(os.path.join(cwd, 'logging.ini'))
-
 
 class PiPlant(PolledSensor):
 
     def __init__(self, config):
         piplantconf = config["piplant"]
+
+        self._devmode = utils.dehumanize(piplantconf["dev_mode"]) if "dev_mode" in piplantconf else False
+        logging_cfg_path = os.path.join(cwd, 'logging.ini')
+        if self._devmode:
+            logging_cfg_path = os.path.join(cwd, 'logging.dev.ini')
+
+        logging.config.fileConfig(logging_cfg_path)
+
         self._poll_interval_seconds = utils.dehumanize(piplantconf["poll_interval"])
         self._render_interval_seconds = utils.dehumanize(piplantconf["render_interval"])
         self._process_time = 0
@@ -46,6 +52,8 @@ class PiPlant(PolledSensor):
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
         """)
 
+        if self._devmode:
+            self.log.info("DEV MODE")
         # sensors
         self.log.info("Initializing sensors...")
 
@@ -69,8 +77,8 @@ class PiPlant(PolledSensor):
         self.log.info("Initializing processors...")
         # TODO: check type of manager
         lmconf = config["lightmanager"]
-        self.schedulemanager = LIFXScheduleManager(lmconf)
-        self.livebodydetection = LIFXLiveBodyDetection(lmconf)
+        self.schedulemanager = LIFXScheduleManager(lmconf, self._devmode)
+        self.livebodydetection = LIFXLiveBodyDetection(lmconf, self._devmode)
         self.log.info("Processors initialized")
 
         # renderers
@@ -79,7 +87,7 @@ class PiPlant(PolledSensor):
         self._display_enabled =  utils.dehumanize(dconf["enabled"])
 
         if self._display_enabled:
-            self.display = EPaper(dconf)
+            self.display = EPaper(dconf, self._devmode)
             if not skip_splash_screen:
                 self.display.draw_splash_screen()
             self.log.info("Display initialized")

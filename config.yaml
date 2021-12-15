@@ -3,9 +3,9 @@ piplant:
   poll_interval: 5s
   render_interval: 1hr
   skip_splash_screen: false
-display:
-  enabled: false
   dev_mode: false
+display:
+  enabled: true
 lightmanager:
   autodiscovery: disabled
   geo_city: "Dublin"
@@ -27,7 +27,7 @@ lightmanager:
       - mac: d0:73:d5:6b:61:51
         ip: 192.168.1.39
   livebody_detection:
-    timeout: 5m
+    timeout: 10m
     on_motion_trigger:
       transition: 0s
       hsbk:

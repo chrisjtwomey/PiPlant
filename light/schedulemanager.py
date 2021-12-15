@@ -11,8 +11,9 @@ class ScheduleManager:
     GEO_DEFAULT_CITY = "Dublin"
     GEO_DEFAULT_TZ = "UTC"
 
-    def __init__(self, config):
+    def __init__(self, config, devmode):
         self.log = logging.getLogger(self.__class__.__name__)
+        self.devmode = devmode
 
         self._schedules = config["schedules"] if "schedules" in config else []
 
@@ -144,6 +145,10 @@ class ScheduleManager:
         self._state_cache = state_cache
 
     def _get_devicegroup_state(self, group_names = [], use_local_state=True):
+        if self.devmode:
+            self.log.debug("get_devicegroup_state:\n\tgroup_names: {}\n\tuse_local_state: {}".format(group_names, use_local_state))
+            return dict()
+
         if len(group_names) == 0:
             group_names = self._devicegroups.keys()
 
@@ -174,6 +179,10 @@ class ScheduleManager:
         return group_states
 
     def _set_devicegroup_hsbk(self, hsbk, group_names = [], transition_seconds=0):
+        if self.devmode:
+            self.log.debug("_set_devicegroup_hsbk:\n\tgroup_names: {}\n\tHSBK: {}\n\ttransition_seconds: {}".format(group_names, hsbk, transition_seconds))
+            return
+
         if len(group_names) == 0:
             group_names = self._devicegroups.keys()
         
