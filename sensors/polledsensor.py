@@ -1,9 +1,7 @@
 import math
 import time
-import logging
 from datetime import datetime
 from sensors.sensor import Sensor
-from gpiozero import GPIOZeroError, GPIOZeroWarning
 
 
 class PolledSensor(Sensor):

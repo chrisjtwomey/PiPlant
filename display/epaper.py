@@ -1,9 +1,7 @@
 import time
 import logging
-import util.utils as utils
 
 from datetime import datetime
-from rpi_epd3in7.epd import EPD
 from .pil import PILUtil
 
 
@@ -15,18 +13,19 @@ class EPaper:
     STEP_24HR_HISTORICAL = 1
     STEP_7DAY_HISTORICAL = 2
     STEP_DEVICE = 3
-    STEP_SOIL_MOISTURE = 4
+    STEP_HYGROMETER = 4
     HOURS_IN_DAY = 24
     HOURS_IN_WEEK = 168
 
-    def __init__(self, config, devmode):
+    def __init__(self, epd, config, debug=False):
         self.log = logging.getLogger("e-Paper")
         self.log.debug("Initializing...")
 
         # write display to file and don't sent to e-Paper
-        self.devmode = devmode
+        self.debug = debug
+        self.config = config
+        self.epd = epd
 
-        self.epd = EPD()
         self.width = self.epd.height
         self.height = self.epd.width
         self.util = PILUtil(self.width, self.height)
@@ -74,7 +73,7 @@ class EPaper:
         self.util.draw_rectangle(x - rW / 2, y + rH / 2, rW, rH, fill=self.epd.GRAY4, outline=self.epd.GRAY4, radius=1)
         self.util.draw_text(font, dt_txt, x, y, fill=self.epd.GRAY1, align='center')
 
-    def draw_soil_moisture_data(self, data):
+    def draw_hygrometer_data(self, data):
         def draw_sensor_data(id, data, coords):
             def percentage_angle_in_range(minAng, maxAng, val_percent):
                 return int(minAng + (maxAng - minAng) * (val_percent / 100))
@@ -176,7 +175,7 @@ class EPaper:
 
             return coords
 
-        self.log.debug("Drawing soil moisture data")
+        self.log.debug("Drawing Hygrometer data")
 
         max_cols_per_row = 3
         col_width = 140
@@ -185,7 +184,11 @@ class EPaper:
         sensor_ids = range(0, num_sensors)
 
         x = self.width / 2 - col_width
-        y = self.height * 0.7
+        y = self.height * 0.5
+
+        if num_sensors > max_cols_per_row:
+            y = self.height * 0.7
+
         coords = inverse_pyramid(
             x, y, col_width, row_height, num_sensors, max_cols_per_row)
 
@@ -327,11 +330,11 @@ class EPaper:
         self.util.draw_linechart(testdata, x, y, w, h)
 
     def draw_data(self, data):
-        soil_moisture_data = data["soil_moisture"]
-        enviroment_data = data["environment"]
+        hygrometer_data = data["hygrometer"]
+        enviroment_data = data["environment"][0]
         device_data = data["device"]
 
-        step = self.STEP_SOIL_MOISTURE
+        step = self.STEP_HYGROMETER
         #step = self.STEP_ENVIRONMENT
         #step = self.STEP_7DAY_HISTORICAL
 
@@ -345,8 +348,8 @@ class EPaper:
         if step == self.STEP_ENVIRONMENT:
             self.draw_environment_data(enviroment_data)
 
-        if step == self.STEP_SOIL_MOISTURE:
-            self.draw_soil_moisture_data(soil_moisture_data)
+        if step == self.STEP_HYGROMETER:
+            self.draw_hygrometer_data(hygrometer_data)
     
         if step == self.STEP_24HR_HISTORICAL:
             self.draw_historical_data(self.HOURS_IN_DAY)
@@ -359,12 +362,12 @@ class EPaper:
         self.draw_to_display(frame)
 
         # steps = [
-        #     self.STEP_SOIL_MOISTURE
+        #     self.STEP_HYGROMETER
         #     self.STEP_ENVIRONMENT,
         #     self.STEP_24HR_HISTORICAL,
         #     self.STEP_7DAY_HISTORICAL,
         #     self.STEP_DEVICE,
-        #     self.STEP_SOIL_MOISTURE
+        #     self.STEP_HYGROMETER
         # ]
 
         # for step in steps:
@@ -380,8 +383,8 @@ class EPaper:
         #     if step == self.STEP_ENVIRONMENT:
 
 
-        #     if step == self.STEP_SOIL_MOISTURE:
-        #         self.draw_soil_moisture_data(soil_moisture_data)
+        #     if step == self.STEP_HYGROMETER:
+        #         self.draw_hygrometer_data(hygrometer_data)
         
         #     if step == self.STEP_24HR_HISTORICAL:
         #         self.draw_historical_data(self.HOURS_IN_DAY)
@@ -394,15 +397,12 @@ class EPaper:
         #     self.draw_to_display(frame)
 
     def draw_to_display(self, frame):
-        if self.devmode:
-            frame.save("static/testframe.png")
-        else:
-            self.epd.init()
-            self.epd.clear()
-            self.epd.display(frame)
+        self.epd.init()
+        self.epd.clear()
+        self.epd.display(frame)
 
     def sleep(self):
-        if not self.devmode:
+        if not self.debug:
             self.epd.sleep()
 
     def delay_ms(self, delaytime):

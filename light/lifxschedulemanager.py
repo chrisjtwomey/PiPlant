@@ -6,9 +6,9 @@ from .schedulemanager import ScheduleManager
 
 
 class LIFXScheduleManager(ScheduleManager):
-    def __init__(self, config, devmode):
+    def __init__(self, config, debug=False):
         self.log = logging.getLogger(self.__class__.__name__)
-        super().__init__(config, devmode)
+        super().__init__(config, debug)
 
     def on_schedule_change(self, current_schedule):
         hsbk = utils.parse_hsbk_map(current_schedule["hsbk"])

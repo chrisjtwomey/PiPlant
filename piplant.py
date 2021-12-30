@@ -1,39 +1,38 @@
 import os
-import re
 import yaml
 import math
 import time
 import logging.config
-from light.lifxlivebodydetection import LIFXLiveBodyDetection
 import util.utils as utils
-from light.lifxschedulemanager import LIFXScheduleManager
+import util.package as pkgutils
 from display.epaper import EPaper
 from sensors.polledsensor import PolledSensor
-from sensors.devicestatistics import DeviceStatistics
-from sensors.sensorhub import SensorHub
-from sensors.soilmoisture import SoilMoistureSensor
-from sensors.profile import *
+from light.lifxschedulemanager import LIFXScheduleManager
+from light.lifxlivebodydetection import LIFXLiveBodyDetection
 
 cwd = os.path.dirname(os.path.realpath(__file__))
+
 
 class PiPlant(PolledSensor):
 
     def __init__(self, config):
         piplantconf = config["piplant"]
 
-        self._devmode = utils.dehumanize(piplantconf["dev_mode"]) if "dev_mode" in piplantconf else False
+        self.debug = utils.dehumanize(
+            piplantconf["debug"]) if "debug" in piplantconf else False
+
         logging_cfg_path = os.path.join(cwd, 'logging.ini')
-        if self._devmode:
+        if self.debug:
             logging_cfg_path = os.path.join(cwd, 'logging.dev.ini')
 
         logging.config.fileConfig(logging_cfg_path)
 
-        self._poll_interval_seconds = utils.dehumanize(piplantconf["poll_interval"])
-        self._render_interval_seconds = utils.dehumanize(piplantconf["render_interval"])
+        self._poll_interval_seconds = utils.dehumanize(
+            piplantconf["poll_interval"])
+        self._render_interval_seconds = utils.dehumanize(
+            piplantconf["render_interval"])
         self._process_time = 0
         self._render_time = 0
-
-        skip_splash_screen = utils.dehumanize(piplantconf["skip_splash_screen"])
 
         super().__init__(self._poll_interval_seconds)
 
@@ -52,42 +51,58 @@ class PiPlant(PolledSensor):
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
         """)
 
-        if self._devmode:
-            self.log.info("DEV MODE")
+        if self.debug:
+            self.log.info("DEBUG MODE")
+
         # sensors
         self.log.info("Initializing sensors...")
 
-        self.soil_moisture_sensors = [
-            SoilMoistureSensor(
-                adc_channel=0, calibrated_max_value=0.68, profile=PROFILE_CHINA_DOLL_BONSAI),
-            SoilMoistureSensor(
-                adc_channel=1, calibrated_max_value=0.70, profile=PROFILE_FUKIEN_TEA_BONSAI),
-            SoilMoistureSensor(
-                adc_channel=2, calibrated_max_value=0.67, profile=PROFILE_PALM),
-            SoilMoistureSensor(
-                adc_channel=3, calibrated_max_value=0.69, profile=PROFILE_FICUS),
-            SoilMoistureSensor(
-                adc_channel=4, calibrated_max_value=0.69, profile=PROFILE_SUCCULENT),
-        ]
-        self.sensorhub = SensorHub()
-        self.boardstats = DeviceStatistics()
+        def import_sensors(sensors):
+            imported_sensors = []
+
+            for sensor_config in sensors:
+                kwargs = sensor_config["kwargs"] if "kwargs" in sensor_config else dict()
+                package = sensor_config["package"]
+                sensor = pkgutils.get_package_instance(package, **kwargs)
+                imported_sensors.append(sensor)
+
+            return imported_sensors
+
+        sensorsconfig = piplantconf["sensors"]
+
+        hygrometers_config = sensorsconfig["hygrometers"] if "hygrometers" in sensorsconfig else []
+        self.hygrometers = import_sensors(hygrometers_config)
+
+        environment_config = sensorsconfig["environment"] if "environment" in sensorsconfig else []
+        self.environment_sensors = import_sensors(environment_config)
+
+        device_config = sensorsconfig["device"] if "device" in sensorsconfig else []
+        self.device_sensors = import_sensors(device_config)
+
         self.log.info("Sensors initialized")
 
         # processors
         self.log.info("Initializing processors...")
         # TODO: check type of manager
         lmconf = config["lightmanager"]
-        self.schedulemanager = LIFXScheduleManager(lmconf, self._devmode)
-        self.livebodydetection = LIFXLiveBodyDetection(lmconf, self._devmode)
+        self.schedulemanager = LIFXScheduleManager(lmconf, debug=self.debug)
+        self.livebodydetection = LIFXLiveBodyDetection(
+            lmconf, debug=self.debug)
         self.log.info("Processors initialized")
 
         # renderers
         self.log.info("Initializing display...")
         dconf = config["display"]
-        self._display_enabled =  utils.dehumanize(dconf["enabled"])
+        self._display_enabled = utils.dehumanize(dconf["enabled"])
 
         if self._display_enabled:
-            self.display = EPaper(dconf, self._devmode)
+            package = dconf["package"]
+            kwargs = dconf["kwargs"]
+            skip_splash_screen = utils.dehumanize(
+                dconf["skip_splash_screen"]) if "skip_splash_screen" in dconf else False
+            epd = pkgutils.get_package_instance(package, **kwargs)
+
+            self.display = EPaper(epd, dconf, debug=self.debug)
             if not skip_splash_screen:
                 self.display.draw_splash_screen()
             self.log.info("Display initialized")
@@ -100,17 +115,22 @@ class PiPlant(PolledSensor):
     def get_value(self):
         self.log.info("Fetching...")
 
-        soil_moisture_data = dict()
-        for sensor in self.soil_moisture_sensors:
-            soil_moisture_data[sensor.adc_channel] = sensor.value
+        hygrometer_data = []
+        for sensor in self.hygrometers:
+            hygrometer_data.append(sensor.value)
 
-        sensorhub_data = dict(self.sensorhub)
-        boardstats_data = dict(self.boardstats)
+        environment_data = []
+        for sensor in self.environment_sensors:
+            environment_data.append(sensor.value)
+
+        device_data = []
+        for sensor in self.device_sensors:
+            device_data.append(sensor.value)
 
         data_payload = {
-            "soil_moisture": soil_moisture_data,
-            "environment": sensorhub_data,
-            "device": boardstats_data,
+            "hygrometer": hygrometer_data,
+            "environment": environment_data,
+            "device": device_data,
         }
 
         return data_payload
@@ -119,7 +139,7 @@ class PiPlant(PolledSensor):
         self.log.info("Processing...")
 
         data = self._value
-        env_data = data["environment"]
+        env_data = data["environment"][0]
         livebody_detection = env_data["livebody_detection"]
 
         self.schedulemanager.process()

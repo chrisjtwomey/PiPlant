@@ -1,6 +1,6 @@
 import os
 import psutil
-from .sensor import Sensor
+from ...sensor import Sensor
 from gpiozero import CPUTemperature, LoadAverage, DiskUsage
 
 

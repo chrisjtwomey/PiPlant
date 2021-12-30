@@ -1,5 +1,5 @@
 import smbus
-from .sensor import Sensor
+from ...sensor import Sensor
 
 
 class SensorHub(Sensor):

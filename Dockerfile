@@ -1,4 +1,4 @@
-FROM arm32v7/python:3.7-buster
+FROM arm32v7/python:3.10.1-buster
 RUN wget https://archive.raspbian.org/raspbian.public.key -O - | apt-key add - \
     && echo 'deb http://raspbian.raspberrypi.org/raspbian/ buster main contrib non-free rpi' | tee -a /etc/apt/sources.list \
     && wget -O - http://archive.raspberrypi.org/debian/raspberrypi.gpg.key | apt-key add - \

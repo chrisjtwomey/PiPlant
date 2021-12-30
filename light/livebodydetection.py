@@ -12,11 +12,11 @@ class LiveBodyDetection:
     DEFAULT_MOTION_TIMEOUT = 30
     DEFAULT_TRANSITION_SECONDS = 0
 
-    def __init__(self, config, devmode):
+    def __init__(self, config, debug=False):
         self.log = logging.getLogger(self.__class__.__name__)
-        self.devmode = devmode
+        self.debug = debug
 
-        lbd_conf = config["livebody_detection"]
+        lbd_conf = config["motion_detection"]
 
         self._pir_detection_time = 0
         self._motion_timeout_seconds = utils.dehumanize(lbd_conf["timeout"]) if "timeout" in lbd_conf else self.DEFAULT_MOTION_TIMEOUT
@@ -94,7 +94,7 @@ class LiveBodyDetection:
         nowtime_naive = time.time()
         if livebody_detection:
             for group_name, devicegroup in self._devicegroups.items():
-                if self.devmode:
+                if self.debug:
                     self.log.debug("on_motion_trigger:\n\tdevicegroup: {}\n\tHSBK: {}\n\ttransition_seconds: {}".format(group_name, self._on_motion_trigger_hsbk, self._on_motion_timeout_transition))
                 else:
                     self.on_motion_trigger(devicegroup, self._on_motion_trigger_hsbk, transition_seconds=self._on_motion_trigger_transition)
@@ -105,7 +105,7 @@ class LiveBodyDetection:
 
             if time_since_detection >= self._motion_timeout_seconds:
                 for group_name, devicegroup in self._devicegroups.items():
-                    if self.devmode:
+                    if self.debug:
                         self.log.debug("on_motion_timeout:\n\tdevicegroup: {}\n\tHSBK: {}\n\ttransition_seconds: {}".format(group_name, self._on_motion_trigger_hsbk, self._on_motion_timeout_transition))
                     else:
                         self.on_motion_timeout(devicegroup, self._on_motion_timeout_hsbk, transition_seconds=self._on_motion_timeout_transition)

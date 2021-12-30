@@ -2,10 +2,60 @@
 piplant:
   poll_interval: 5s
   render_interval: 1hr
-  skip_splash_screen: false
-  dev_mode: false
+  debug: true
+  plants:
+    - name: fukien_tea
+      water_threshold: 25%
+      min_temp: 8
+      max_temp: 28
+      icon: fukien_tea.png
+    - name: china_doll
+      water_threshold: 35%
+      min_temp: 5
+      max_temp: 25.5
+      icon: china_doll.png
+    - name: emerald_palm
+      water_threshold: 10%
+      min_temp: 7
+      max_temp: 28
+      icon: palm.png
+  sensors:
+    hygrometers:
+      - plant: fukien_tea
+        package: sensors.hygrometer.aideepen
+        kwargs:
+          mock: true
+          adc_channel: 1
+          calibrated_max_val: 0.70
+      - plant: china_doll
+        package: sensors.hygrometer.aideepen
+        kwargs:
+          mock: true
+          adc_channel: 2
+          calibrated_max_val: 0.68
+      - plant: emerald_palm
+        package: sensors.hygrometer.aideepen
+        kwargs:
+          mock: true
+          adc_channel: 3
+          calibrated_max_val: 0.67
+    environment:
+      - name: SensorHub
+        package: sensors.environment.dockerpi
+        kwargs:
+          mock: true
+    device:
+      - name: RPi
+        package: sensors.device.raspberrypi
+        kwargs:
+          mock: true
 display:
+  package: display.rpi_epd3in7
+  kwargs:
+    mock: true
   enabled: true
+  refresh_interval: 1hr
+  skip_splash_screen: false
 lightmanager:
   autodiscovery: disabled
   geo_city: "Dublin"
@@ -26,8 +76,8 @@ lightmanager:
         ip: 192.168.1.30
       - mac: d0:73:d5:6b:61:51
         ip: 192.168.1.39
-  livebody_detection:
-    timeout: 10m
+  motion_detection:
+    timeout: 15m
     on_motion_trigger:
       transition: 0s
       hsbk:
