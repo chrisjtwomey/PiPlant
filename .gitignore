@@ -87,3 +87,5 @@ piplant.log.*
 workspace.code-workspace
 .vscode/
 .devcontainer
+
+piplant-env

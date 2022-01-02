@@ -1,58 +1,75 @@
 ---
 piplant:
   poll_interval: 5s
-  render_interval: 1hr
   debug: true
-  plants:
-    - name: fukien_tea
-      water_threshold: 25%
-      min_temp: 8
-      max_temp: 28
-      icon: fukien_tea.png
-    - name: china_doll
-      water_threshold: 35%
-      min_temp: 5
-      max_temp: 25.5
-      icon: china_doll.png
-    - name: emerald_palm
-      water_threshold: 10%
-      min_temp: 7
-      max_temp: 28
-      icon: palm.png
   sensors:
     hygrometers:
-      - plant: fukien_tea
-        package: sensors.hygrometer.aideepen
-        kwargs:
-          mock: true
-          adc_channel: 1
-          calibrated_max_val: 0.70
-      - plant: china_doll
-        package: sensors.hygrometer.aideepen
-        kwargs:
-          mock: true
-          adc_channel: 2
-          calibrated_max_val: 0.68
-      - plant: emerald_palm
-        package: sensors.hygrometer.aideepen
-        kwargs:
-          mock: true
-          adc_channel: 3
-          calibrated_max_val: 0.67
+      - package: 
+          module: sensors.hygrometer.aideepen
+          class: CapacitiveHygrometer
+          kwargs:
+            mock: true
+            adc_channel: 1
+            min_value: 0.30
+            max_value: 0.70
+            dry_value_percentage: 25
+      - package: 
+          module: sensors.hygrometer.aideepen
+          class: CapacitiveHygrometer
+          kwargs:
+            mock: true
+            adc_channel: 2
+            min_value: 0.30
+            max_value: 0.68
+            dry_value_percentage: 35
+      - package: 
+          module: sensors.hygrometer.aideepen
+          class: CapacitiveHygrometer
+          kwargs:
+            mock: true
+            adc_channel: 3
+            min_value: 0.30
+            max_value: 0.67
+            dry_value_percentage: 10
     environment:
-      - name: SensorHub
-        package: sensors.environment.dockerpi
-        kwargs:
-          mock: true
+      temperature:
+        package: 
+          module: sensors.environment.dockerpi
+          class: SensorHub
+          kwargs:
+            mock: true
+      humidity:
+        package: 
+          module: sensors.environment.dockerpi
+          class: SensorHub
+          kwargs:
+            mock: true
+      pressure:
+        package: 
+          module: sensors.environment.dockerpi
+          class: SensorHub
+          kwargs:
+            mock: true
+      brightness:
+        package: 
+          module: sensors.environment.dockerpi
+          class: SensorHub
+          kwargs:
+            mock: true
     device:
-      - name: RPi
-        package: sensors.device.raspberrypi
-        kwargs:
-          mock: true
-display:
-  package: display.rpi_epd3in7
-  kwargs:
-    mock: true
+      - package: 
+          module: sensors.device.raspberrypi
+          class: DeviceStatistics
+          kwargs:
+            mock: true
+epaper:
+  driver:
+    package: 
+      remote_module: rpi_epd3in7.epd
+      module: epaper.driver.rpi_epd3in7
+      class: EPD
+      kwargs:
+        mock: true
   enabled: true
   refresh_interval: 1hr
   skip_splash_screen: false
@@ -77,6 +94,11 @@ lightmanager:
       - mac: d0:73:d5:6b:61:51
         ip: 192.168.1.39
   motion_detection:
+    package: 
+      module: sensors.environment.dockerpi
+      class: SensorHub
+      kwargs:
+        mock: true
     timeout: 15m
     on_motion_trigger:
       transition: 0s

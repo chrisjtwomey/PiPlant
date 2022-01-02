@@ -3,6 +3,7 @@ import util.utils as utils
 from .devicegroup import lifx
 from .livebodydetection import LiveBodyDetection
 
+
 class LIFXLiveBodyDetection(LiveBodyDetection):
     def __init__(self, config, debug=False):
         self.log = logging.getLogger(self.__class__.__name__)
@@ -32,10 +33,11 @@ class LIFXLiveBodyDetection(LiveBodyDetection):
 
     def get_devicegroup_power(self, devicegroup):
         return lifx.get_devicegroup_power(devicegroup)
-    
+
     def set_devicegroup_power(self, devicegroup, power):
         return lifx.set_devicegroup_power(devicegroup, power)
 
     def set_devicegroup_hsbk(self, devicegroup, hsbk, transition_seconds=0):
-        return lifx.set_devicegroup_hsbk(devicegroup, hsbk, transition_seconds=transition_seconds)
-    
+        return lifx.set_devicegroup_hsbk(
+            devicegroup, hsbk, transition_seconds=transition_seconds
+        )

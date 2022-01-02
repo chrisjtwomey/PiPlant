@@ -29,12 +29,12 @@ class PolledSensor(Sensor):
             self.log.debug("No previous data received")
             return True
 
-        receive_time_dtfmt = datetime.fromtimestamp(
-            self._receive_time).strftime(self.POLL_TIME_FORMAT)
+        receive_time_dtfmt = datetime.fromtimestamp(self._receive_time).strftime(
+            self.POLL_TIME_FORMAT
+        )
         self.log.debug("Last receive time is {}".format(receive_time_dtfmt))
         data_age = math.ceil(time.time() - self._receive_time)
         is_stale = data_age >= self._poll_interval
-        self.log.debug(
-            "Data age is {} seconds; stale: {}".format(data_age, is_stale))
+        self.log.debug("Data age is {} seconds; stale: {}".format(data_age, is_stale))
 
         return is_stale

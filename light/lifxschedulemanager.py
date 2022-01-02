@@ -12,12 +12,20 @@ class LIFXScheduleManager(ScheduleManager):
 
     def on_schedule_change(self, current_schedule):
         hsbk = utils.parse_hsbk_map(current_schedule["hsbk"])
-        
+
         # tz localized datetime
         nowdate_tzaware = datetime.datetime.now(tz=self.geocity.tzinfo)
-        curr_schedule_dt = utils.hour_to_datetime(current_schedule["time"], tz=self.get_tzinfo())
-        transition_seconds = utils.dehumanize(current_schedule["transition"]) if "transition" in current_schedule else 0
-        schedule_transition_over_dt = curr_schedule_dt + datetime.timedelta(seconds=transition_seconds)
+        curr_schedule_dt = utils.hour_to_datetime(
+            current_schedule["time"], tz=self.get_tzinfo()
+        )
+        transition_seconds = (
+            utils.dehumanize(current_schedule["transition"])
+            if "transition" in current_schedule
+            else 0
+        )
+        schedule_transition_over_dt = curr_schedule_dt + datetime.timedelta(
+            seconds=transition_seconds
+        )
 
         if nowdate_tzaware >= schedule_transition_over_dt:
             transition_seconds = 0
@@ -32,7 +40,7 @@ class LIFXScheduleManager(ScheduleManager):
 
     def get_devicegroup_power(self, devicegroup):
         return lifx.get_devicegroup_power(devicegroup)
-    
+
     def set_devicegroup_power(self, devicegroup, power):
         return lifx.set_devicegroup_power(devicegroup, power)
 
@@ -40,4 +48,6 @@ class LIFXScheduleManager(ScheduleManager):
         return lifx.get_devicegroup_hsbk(devicegroup)
 
     def set_devicegroup_hsbk(self, devicegroup, hsbk, transition_seconds=0):
-        return lifx.set_devicegroup_hsbk(devicegroup, hsbk, transition_seconds=transition_seconds)
+        return lifx.set_devicegroup_hsbk(
+            devicegroup, hsbk, transition_seconds=transition_seconds
+        )

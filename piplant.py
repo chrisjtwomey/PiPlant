@@ -4,8 +4,8 @@ import math
 import time
 import logging.config
 import util.utils as utils
-import util.package as pkgutils
-from display.epaper import EPaper
+from util.package import DynamicPackage
+from epaper.epaper import EPaper
 from sensors.polledsensor import PolledSensor
 from light.lifxschedulemanager import LIFXScheduleManager
 from light.lifxlivebodydetection import LIFXLiveBodyDetection
@@ -14,29 +14,29 @@ cwd = os.path.dirname(os.path.realpath(__file__))
 
 
 class PiPlant(PolledSensor):
-
     def __init__(self, config):
         piplantconf = config["piplant"]
 
-        self.debug = utils.dehumanize(
-            piplantconf["debug"]) if "debug" in piplantconf else False
+        self.debug = (
+            utils.dehumanize(piplantconf["debug"]) if "debug" in piplantconf else False
+        )
 
-        logging_cfg_path = os.path.join(cwd, 'logging.ini')
+        logging_cfg_path = os.path.join(cwd, "logging.ini")
         if self.debug:
-            logging_cfg_path = os.path.join(cwd, 'logging.dev.ini')
+            logging_cfg_path = os.path.join(cwd, "logging.dev.ini")
 
         logging.config.fileConfig(logging_cfg_path)
 
-        self._poll_interval_seconds = utils.dehumanize(
-            piplantconf["poll_interval"])
-        self._render_interval_seconds = utils.dehumanize(
-            piplantconf["render_interval"])
+        self._poll_interval_seconds = utils.dehumanize(piplantconf["poll_interval"])
+        dconf = config["epaper"]
+        self._render_interval_seconds = utils.dehumanize(dconf["refresh_interval"])
         self._process_time = 0
         self._render_time = 0
 
         super().__init__(self._poll_interval_seconds)
 
-        self.log.info(r"""\
+        self.log.info(
+            r"""\
             
                             PiPlant
                          @chrisjtwomey
@@ -49,7 +49,8 @@ class PiPlant(PolledSensor):
     \ |     \ |/       | / \ | /  \|/       |/    \|      \|/
     \\|//   \\|///  \\\|//\\\|/// \|///  \\\|//  \\|//  \\\|// 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-        """)
+        """
+        )
 
         if self.debug:
             self.log.info("DEBUG MODE")
@@ -57,27 +58,51 @@ class PiPlant(PolledSensor):
         # sensors
         self.log.info("Initializing sensors...")
 
-        def import_sensors(sensors):
-            imported_sensors = []
+        def init_sensors(sensors_config):
+            sensors = []
 
-            for sensor_config in sensors:
-                kwargs = sensor_config["kwargs"] if "kwargs" in sensor_config else dict()
-                package = sensor_config["package"]
-                sensor = pkgutils.get_package_instance(package, **kwargs)
-                imported_sensors.append(sensor)
+            for config in sensors_config:
+                package = config["package"]
+                sensor = DynamicPackage(package)
+                sensors.append(sensor)
 
-            return imported_sensors
+            return sensors
+
+        def init_env_sensors(env_config):
+            sensors = dict()
+
+            if "temperature" in env_config:
+                package = env_config["temperature"]["package"]
+                sensors["temperature"] = DynamicPackage(package)
+
+            if "humidity" in env_config:
+                package = env_config["humidity"]["package"]
+                sensors["humidity"] = DynamicPackage(package)
+
+            if "pressure" in env_config:
+                package = env_config["pressure"]["package"]
+                sensors["pressure"] = DynamicPackage(package)
+
+            if "brightness" in env_config:
+                package = env_config["brightness"]["package"]
+                sensors["brightness"] = DynamicPackage(package)
+
+            return sensors
 
         sensorsconfig = piplantconf["sensors"]
 
-        hygrometers_config = sensorsconfig["hygrometers"] if "hygrometers" in sensorsconfig else []
-        self.hygrometers = import_sensors(hygrometers_config)
+        hygrometers_config = (
+            sensorsconfig["hygrometers"] if "hygrometers" in sensorsconfig else []
+        )
+        self.hygrometers = init_sensors(hygrometers_config)
 
-        environment_config = sensorsconfig["environment"] if "environment" in sensorsconfig else []
-        self.environment_sensors = import_sensors(environment_config)
+        environment_config = (
+            sensorsconfig["environment"] if "environment" in sensorsconfig else dict()
+        )
+        self.environment_sensors = init_env_sensors(environment_config)
 
         device_config = sensorsconfig["device"] if "device" in sensorsconfig else []
-        self.device_sensors = import_sensors(device_config)
+        self.device_sensors = init_sensors(device_config)
 
         self.log.info("Sensors initialized")
 
@@ -86,22 +111,23 @@ class PiPlant(PolledSensor):
         # TODO: check type of manager
         lmconf = config["lightmanager"]
         self.schedulemanager = LIFXScheduleManager(lmconf, debug=self.debug)
-        self.livebodydetection = LIFXLiveBodyDetection(
-            lmconf, debug=self.debug)
+        self.livebodydetection = LIFXLiveBodyDetection(lmconf, debug=self.debug)
         self.log.info("Processors initialized")
 
         # renderers
         self.log.info("Initializing display...")
-        dconf = config["display"]
+        dconf = config["epaper"]
         self._display_enabled = utils.dehumanize(dconf["enabled"])
 
         if self._display_enabled:
-            package = dconf["package"]
-            kwargs = dconf["kwargs"]
-            skip_splash_screen = utils.dehumanize(
-                dconf["skip_splash_screen"]) if "skip_splash_screen" in dconf else False
-            epd = pkgutils.get_package_instance(package, **kwargs)
-
+            driver = dconf["driver"]
+            package = driver["package"]
+            skip_splash_screen = (
+                utils.dehumanize(dconf["skip_splash_screen"])
+                if "skip_splash_screen" in dconf
+                else False
+            )
+            epd = DynamicPackage(package)
             self.display = EPaper(epd, dconf, debug=self.debug)
             if not skip_splash_screen:
                 self.display.draw_splash_screen()
@@ -109,23 +135,26 @@ class PiPlant(PolledSensor):
 
         self._value = dict()
 
-        self.log.info("PiPlant initialized: fetching data every {} seconds".format(
-            self._poll_interval_seconds))
+        self.log.info(
+            "PiPlant initialized: fetching data every {} seconds".format(
+                self._poll_interval_seconds
+            )
+        )
 
     def get_value(self):
         self.log.info("Fetching...")
 
         hygrometer_data = []
         for sensor in self.hygrometers:
-            hygrometer_data.append(sensor.value)
+            hygrometer_data.append(sensor.data)
 
-        environment_data = []
-        for sensor in self.environment_sensors:
-            environment_data.append(sensor.value)
+        environment_data = dict()
+        for sensortype, sensor in self.environment_sensors.items():
+            environment_data[sensortype] = sensor.data[sensortype]
 
         device_data = []
         for sensor in self.device_sensors:
-            device_data.append(sensor.value)
+            device_data.append(sensor.data)
 
         data_payload = {
             "hygrometer": hygrometer_data,
@@ -138,19 +167,19 @@ class PiPlant(PolledSensor):
     def process(self, data):
         self.log.info("Processing...")
 
-        data = self._value
-        env_data = data["environment"][0]
-        livebody_detection = env_data["livebody_detection"]
-
+        _ = self._value
+        
         self.schedulemanager.process()
-        self.livebodydetection.process(livebody_detection)
+        self.livebodydetection.process()
         self._process_time = time.time()
 
         # save to db
         # print(data)
         return None
 
-    def render(self,):
+    def render(
+        self,
+    ):
         now = time.time()
         # if time to render
         if math.ceil(now - self._render_time) >= self._render_interval_seconds:
@@ -169,8 +198,8 @@ class PiPlant(PolledSensor):
         time.sleep(seconds)
 
 
-if __name__ == '__main__':
-    cfg_path = os.path.join(cwd, 'config.yaml')
+if __name__ == "__main__":
+    cfg_path = os.path.join(cwd, "config.yaml")
     with open(cfg_path, "r") as fs:
         config = yaml.safe_load(fs)
         ppm = PiPlant(config)

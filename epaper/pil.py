@@ -1,4 +1,3 @@
-
 import os
 import math
 import matplotlib.pyplot as plt
@@ -8,9 +7,10 @@ from matplotlib import font_manager
 from PIL import Image, ImageFont, ImageDraw
 import scipy.signal
 
+
 class PILUtil:
-    MODE_1GRAY = '1'
-    MODE_4GRAY = 'L'
+    MODE_1GRAY = "1"
+    MODE_4GRAY = "L"
 
     def __init__(self, width, height):
         self.width = width
@@ -33,27 +33,33 @@ class PILUtil:
         self.logo_size_small = (90, 18)
         self.logo_size_large = (168, 60)
 
-        self.icondir = os.path.join(os.path.dirname(
-            os.path.dirname(os.path.realpath(__file__))), 'static', 'icon')
-        self.fontdir = os.path.join(os.path.dirname(
-            os.path.dirname(os.path.realpath(__file__))), 'static', 'font')
+        self.icondir = os.path.join(
+            os.path.dirname(os.path.dirname(os.path.realpath(__file__))),
+            "static",
+            "icon",
+        )
+        self.fontdir = os.path.join(
+            os.path.dirname(os.path.dirname(os.path.realpath(__file__))),
+            "static",
+            "font",
+        )
 
-        font_files = font_manager.findSystemFonts(fontpaths=self.fontdir, fontext='ttf')
+        font_files = font_manager.findSystemFonts(fontpaths=self.fontdir, fontext="ttf")
 
         for font_file in font_files:
             font_manager.fontManager.addfont(font_file)
 
         # set font
-        plt.rcParams['font.family'] = 'Roboto'
-        plt.rcParams['font.size'] = 5
-
+        plt.rcParams["font.family"] = "Roboto"
+        plt.rcParams["font.size"] = 5
 
     def get_icon_path(self, filename):
         return os.path.join(self.icondir, filename)
 
-    def get_font(self, name='Roboto', type='regular', size=24):
+    def get_font(self, name="Roboto", type="regular", size=24):
         return ImageFont.truetype(
-            self.fontdir + '/{}-{}.ttf'.format(name, type.capitalize()), size)
+            self.fontdir + "/{}-{}.ttf".format(name, type.capitalize()), size
+        )
 
     def new_frame(self, mode):
         if self.frame != None:
@@ -87,7 +93,7 @@ class PILUtil:
 
         return draw
 
-    def draw_image(self, filename, x, y, size, bgcolor='#FFF'):
+    def draw_image(self, filename, x, y, size, bgcolor="#FFF"):
         sizeW, sizeH = size
         coords = self.translate(x - sizeW / 2, y + sizeH / 2)
         path = self.get_icon_path(filename)
@@ -95,7 +101,7 @@ class PILUtil:
         img = Image.open(path).convert("RGBA")
         img.thumbnail(size, Image.ANTIALIAS)
 
-        background = Image.new('RGBA', img.size, bgcolor)
+        background = Image.new("RGBA", img.size, bgcolor)
         alpha_composite = Image.alpha_composite(background, img)
 
         frame = self.get_frame()
@@ -104,7 +110,7 @@ class PILUtil:
     def draw_image_obj(self, img, x, y, size):
         sizeW, sizeH = size
         coords = self.translate(x - sizeW / 2, y + sizeH / 2)
- 
+
         img.thumbnail(size, Image.ANTIALIAS)
 
         frame = self.get_frame()
@@ -118,12 +124,12 @@ class PILUtil:
         draw.line((x1, y1, x2, y2), fill, width)
         del draw
 
-    def draw_text(self, font, text, x, y, fill=0, align='left'):
+    def draw_text(self, font, text, x, y, fill=0, align="left"):
         draw = self.get_draw()
         sizeW, sizeH = draw.textsize(text, font)
         x, y = self.translate(x - sizeW / 2, y + sizeH / 2)
 
-        #draw.text((x, y), text, font=font, fill=fill)
+        # draw.text((x, y), text, font=font, fill=fill)
         draw.multiline_text((x, y), text, font=font, fill=fill, align=align)
         del draw
 
@@ -131,7 +137,7 @@ class PILUtil:
         x, y = self.translate(x, y)
 
         draw = self.get_draw()
-        draw.ellipse([(x-r, y-r), (x+r, y+r)], fill, outline)
+        draw.ellipse([(x - r, y - r), (x + r, y + r)], fill, outline)
         del draw
 
     def draw_rectangle(self, x, y, w, h, fill=0, outline=0, width=1, radius=0):
@@ -141,7 +147,12 @@ class PILUtil:
         draw = self.get_draw()
         if radius > 0:
             draw.rounded_rectangle(
-                [(x, y), (x1, y1)], radius=radius, fill=fill, outline=outline, width=width)
+                [(x, y), (x1, y1)],
+                radius=radius,
+                fill=fill,
+                outline=outline,
+                width=width,
+            )
         else:
             draw.rectangle([(x, y), (x1, y1)], fill, outline, width)
 
@@ -174,7 +185,9 @@ class PILUtil:
         draw.arc(bb, startAngle, endAngle, fill, width=width)
         del draw
 
-    def draw_dashed_arc(self, x, y, r, startAngle, endAngle, fill = 0, width=1, dash_length=4):
+    def draw_dashed_arc(
+        self, x, y, r, startAngle, endAngle, fill=0, width=1, dash_length=4
+    ):
         x, y = self.translate(x, y)
 
         # get bounding box based on center point and radius
@@ -188,7 +201,7 @@ class PILUtil:
         if arc_angle <= 0:
             return
 
-        arc_length = (math.pi * (r * 2) * (arc_angle / 360))
+        arc_length = math.pi * (r * 2) * (arc_angle / 360)
         iterations = int(arc_length / dash_length)
 
         if iterations <= 0:
@@ -200,7 +213,7 @@ class PILUtil:
 
         i = 0
         for theta in range(startAngle, endAngle, delta_angle):
-            color = fill if i % 2 != 0 else '#FFF'
+            color = fill if i % 2 != 0 else "#FFF"
             draw.arc(bb, theta, theta + delta_angle, color, width=width)
             i += 1
 
@@ -208,31 +221,29 @@ class PILUtil:
 
     def draw_linechart(self, data, x, y, w, h, dpi=150):
         canvas_size = self._calc_fig_size(w, h, 150)
-        fig = plt.figure(
-            constrained_layout=True,
-            figsize=canvas_size,
-            dpi=dpi
-        )
+        fig = plt.figure(constrained_layout=True, figsize=canvas_size, dpi=dpi)
 
         series = data["series"]
-        
+
         for line in series:
             px = line["axis"]["x"]
             py = line["axis"]["y"]
 
-            py = scipy.signal.savgol_filter(py, len(px) -1, 4)
+            py = scipy.signal.savgol_filter(py, len(px) - 1, 4)
 
-            plt.plot(px, py, linewidth=0.5)    
+            plt.plot(px, py, linewidth=0.5)
 
-        ax=plt.gca()
-        xfmt = md.DateFormatter('%a')
+        ax = plt.gca()
+        xfmt = md.DateFormatter("%a")
         ax.xaxis.set_major_formatter(xfmt)
-        ax.spines['top'].set_visible(False)
-        ax.spines['right'].set_visible(False)
+        ax.spines["top"].set_visible(False)
+        ax.spines["right"].set_visible(False)
         ax.set_ylim([0, 100])
 
         fig.canvas.draw()
-        plotimg = Image.frombytes('RGB', fig.canvas.get_width_height(),fig.canvas.tostring_rgb())
+        plotimg = Image.frombytes(
+            "RGB", fig.canvas.get_width_height(), fig.canvas.tostring_rgb()
+        )
         self.draw_image_obj(plotimg, x, y, (w, h))
 
     def textsize(self, text, font):

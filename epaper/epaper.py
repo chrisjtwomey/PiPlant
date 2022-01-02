@@ -66,32 +66,41 @@ class EPaper:
 
         now = datetime.now()
         dt_txt = now.strftime("%H:%M\n%d/%m/%Y")
-        font = self.util.get_font(type='medium', size=self.util.text_size_tiny)
+        font = self.util.get_font(type="medium", size=self.util.text_size_tiny)
         tW, tH = self.util.textsize(dt_txt, font)
         rW, rH = tW + self.margin_px * 2, tH + self.margin_px * 2
         x, y = self.width - tW / 2, self.height - tH / 2
-        self.util.draw_rectangle(x - rW / 2, y + rH / 2, rW, rH, fill=self.epd.GRAY4, outline=self.epd.GRAY4, radius=1)
-        self.util.draw_text(font, dt_txt, x, y, fill=self.epd.GRAY1, align='center')
+        self.util.draw_rectangle(
+            x - rW / 2,
+            y + rH / 2,
+            rW,
+            rH,
+            fill=self.epd.GRAY4,
+            outline=self.epd.GRAY4,
+            radius=1,
+        )
+        self.util.draw_text(font, dt_txt, x, y, fill=self.epd.GRAY1, align="center")
 
     def draw_hygrometer_data(self, data):
         def draw_sensor_data(id, data, coords):
             def percentage_angle_in_range(minAng, maxAng, val_percent):
                 return int(minAng + (maxAng - minAng) * (val_percent / 100))
 
-            sensor_val_percent = data["value"]
-            poor_water = data["needs_water"]
-            poor_water_percent = data["needs_water_threshold_percent"]
+            sensor_val_percent = data["percentage"]
+            poor_water = data["is_dry"]
+            poor_water_percent = data["dry_threshold_percentage"]
             draw_value_text = False
             value_text = str(sensor_val_percent) + "%"
-            warning = data["error"]
+            # warning = data["error"]
+            warning = None
 
-            font = self.util.get_font(type='medium', size=self.util.text_size_tiny)
+            font = self.util.get_font(type="medium", size=self.util.text_size_tiny)
             coords_x, coords_y = coords
 
-            sensor_icon = data["icon"]
-            water_icon = 'water.png'
-            dry_warning_icon = 'dry_warning.png'
-            warning_icon = 'warning.png'
+            sensor_icon = "plant.png"
+            water_icon = "water.png"
+            dry_warning_icon = "dry_warning.png"
+            warning_icon = "warning.png"
 
             # plant icon params
             icon_medW, _ = self.util.icon_size_very_large
@@ -104,9 +113,11 @@ class EPaper:
             max_ang = self.WATER_PERCENT_100_DEGREES
 
             poor_water_level_ang = percentage_angle_in_range(
-                min_ang, max_ang, poor_water_percent)
+                min_ang, max_ang, poor_water_percent
+            )
             water_level_ang = percentage_angle_in_range(
-                min_ang, max_ang, sensor_val_percent)
+                min_ang, max_ang, sensor_val_percent
+            )
 
             if poor_water:
                 poor_water_level_ang = water_level_ang
@@ -115,30 +126,42 @@ class EPaper:
             self.util.draw_image(sensor_icon, iX, iY, self.util.icon_size_very_large)
 
             if warning:
-                self.util.draw_image(warning_icon, iX, iY,
-                                     self.util.icon_size_small)
+                self.util.draw_image(warning_icon, iX, iY, self.util.icon_size_small)
             else:
                 # draw dry level
                 self.util.draw_dashed_arc(
-                    cX, cY, r, min_ang, poor_water_level_ang, fill=self.epd.GRAY4, width=1)
+                    cX,
+                    cY,
+                    r,
+                    min_ang,
+                    poor_water_level_ang,
+                    fill=self.epd.GRAY4,
+                    width=1,
+                )
                 # draw water remaining
                 self.util.draw_arc(
-                    cX, cY, r, poor_water_level_ang, water_level_ang, fill=self.epd.GRAY4, width=1)
+                    cX,
+                    cY,
+                    r,
+                    poor_water_level_ang,
+                    water_level_ang,
+                    fill=self.epd.GRAY4,
+                    width=1,
+                )
                 # get start point on arc to draw water level
                 sX, sY = self.util.point_on_circle(cX, cY, r, min_ang)
-                self.util.draw_circle(sX, sY, 3, fill='white')
+                self.util.draw_circle(sX, sY, 3, fill="white")
                 # get end point on arc to draw water level
                 eX, eY = self.util.point_on_circle(cX, cY, r, max_ang)
-                self.util.draw_circle(eX, eY, 3, fill='white')
+                self.util.draw_circle(eX, eY, 3, fill="white")
                 # water icon coords
-                wiX, wiY = self.util.point_on_circle(
-                    cX, cY, r, water_level_ang)
+                wiX, wiY = self.util.point_on_circle(cX, cY, r, water_level_ang)
 
                 icon = water_icon if not poor_water else dry_warning_icon
                 self.util.draw_image(icon, wiX, wiY, self.util.icon_size_tiny)
 
             # draw sensor id
-            sensor_id = '#' + str(id)
+            sensor_id = "#" + str(id)
             tW, tH = font.getsize(sensor_id)
             tX, tY = cX - r, cY + r
             self.util.draw_text(font, sensor_id, tX, tY)
@@ -153,7 +176,7 @@ class EPaper:
             def chunks(lst, n):
                 """Yield successive n-sized chunks from lst."""
                 for i in range(0, len(lst), n):
-                    yield lst[i:i + n]
+                    yield lst[i : i + n]
 
             coords = []
             items = range(0, max_items)
@@ -190,7 +213,8 @@ class EPaper:
             y = self.height * 0.7
 
         coords = inverse_pyramid(
-            x, y, col_width, row_height, num_sensors, max_cols_per_row)
+            x, y, col_width, row_height, num_sensors, max_cols_per_row
+        )
 
         for id in sensor_ids:
             sensor_data = data[id]
@@ -200,13 +224,16 @@ class EPaper:
         def draw_sensor_data(icon, data_key, sensor_unit_txt, x, y):
             iW, iH = self.util.icon_size_medium
             sensor_txt = str(data[data_key])
-            font = self.util.get_font(type='bold', size=self.util.text_size_large)
+            font = self.util.get_font(type="bold", size=self.util.text_size_large)
             tW, _ = font.getsize(sensor_txt)
-            iX, iY = x + iW / 2, y - iH / 1.5,
+            iX, iY = (
+                x + iW / 2,
+                y - iH / 1.5,
+            )
             self.util.draw_image(icon, iX, iY, (iW, iH))
             tX, tY = x + iW + tW / 2, y
             self.util.draw_text(font, sensor_txt, x + iW + tW / 2, y)
-            font = self.util.get_font(type='thin', size=self.util.text_size_medium)
+            font = self.util.get_font(type="thin", size=self.util.text_size_medium)
             tuW, tuH = font.getsize(sensor_unit_txt)
             tX, tY = tX + tW / 2 + tuW / 2, tY - tuH / 2
             self.util.draw_text(font, sensor_unit_txt, tX, tY)
@@ -217,7 +244,7 @@ class EPaper:
             "ext_temp": u"\N{DEGREE SIGN}C",
             "onboard_brightness": "Lux",
             "onboard_humidity": "%",
-            "baro_pressure": "hPa"
+            "baro_pressure": "hPa",
         }
 
         x, y = 0, self.height - self.header_height
@@ -230,40 +257,52 @@ class EPaper:
         x, y = self.margin_px + o_tW / 2, self.height - self.header_height * 1.3
 
         self.util.draw_text(font, outside_txt, x, y)
-        self.util.draw_line(x + o_tW / 2 + self.margin_px, y - 2, self.width - self.margin_px * 2, y - 2, width = 2)
+        self.util.draw_line(
+            x + o_tW / 2 + self.margin_px,
+            y - 2,
+            self.width - self.margin_px * 2,
+            y - 2,
+            width=2,
+        )
 
         x, y = self.margin_px + i_tW / 2, y - row_height
         self.util.draw_text(font, inside_txt, x, y)
-        self.util.draw_line(x + i_tW / 2 + self.margin_px, y - 2, self.width - self.margin_px * 2, y - 2, width = 2)
+        self.util.draw_line(
+            x + i_tW / 2 + self.margin_px,
+            y - 2,
+            self.width - self.margin_px * 2,
+            y - 2,
+            width=2,
+        )
 
         outside_row_y = self.height - self.header_height - row_height / 2
         inside_row_y = self.height - self.header_height - row_height - row_height / 2
         init_x = self.width * 0.01
         sensor_margin = self.width * 0.2
 
-        icon = 'ext_temp.png'
-        data_key = 'ext_temp'
+        icon = "ext_temp.png"
+        data_key = "temperature"
         sensor_unit_txt = u"\N{DEGREE SIGN}C"
         x = init_x
         draw_sensor_data(icon, data_key, sensor_unit_txt, x, outside_row_y)
 
-        data_key = 'onboard_temp'
-        draw_sensor_data(icon, data_key, sensor_unit_txt, x, inside_row_y)
+        # data_key = "onboard_temp"
+        # draw_sensor_data(icon, data_key, sensor_unit_txt, x, inside_row_y)
 
-        icon = 'onboard_brightness.png'
-        data_key = 'onboard_brightness'
+        icon = "onboard_brightness.png"
+        data_key = "brightness"
         sensor_unit_txt = "lux"
         x = init_x + sensor_margin * 3
         draw_sensor_data(icon, data_key, sensor_unit_txt, x, outside_row_y)
 
-        icon = 'onboard_humidity.png'
-        data_key = 'onboard_humidity'
+        icon = "onboard_humidity.png"
+        data_key = "humidity"
         sensor_unit_txt = "%"
         x = init_x + sensor_margin * 1.6
         draw_sensor_data(icon, data_key, sensor_unit_txt, x, inside_row_y)
 
-        icon = 'baro_pressure.png'
-        data_key = 'baro_pressure'
+        icon = "baro_pressure.png"
+        data_key = "pressure"
         sensor_unit_txt = "hPa"
         x = init_x + sensor_margin * 3
         draw_sensor_data(icon, data_key, sensor_unit_txt, x, inside_row_y)
@@ -280,7 +319,7 @@ class EPaper:
                             "1634214552",
                             "1634128152",
                             "1634041752",
-                            "1633955352",  
+                            "1633955352",
                         ],
                         "y": [
                             97,
@@ -288,9 +327,9 @@ class EPaper:
                             85,
                             59,
                             75,
-                            25, 
-                        ]
-                    }
+                            25,
+                        ],
+                    },
                 },
                 {
                     "id": "2",
@@ -301,7 +340,7 @@ class EPaper:
                             "1634214552",
                             "1634128152",
                             "1634041752",
-                            "1633955352",  
+                            "1633955352",
                         ],
                         "y": [
                             90,
@@ -309,15 +348,13 @@ class EPaper:
                             25,
                             80,
                             95,
-                            10, 
-                        ]
-                    }
-                }
+                            10,
+                        ],
+                    },
+                },
             ]
         }
-        graphdata = {
-            "series": []
-        }
+        graphdata = {"series": []}
 
         hours_ago_epoch_time = datetime.date.today() - datetime.timedelta()
 
@@ -331,12 +368,12 @@ class EPaper:
 
     def draw_data(self, data):
         hygrometer_data = data["hygrometer"]
-        enviroment_data = data["environment"][0]
+        enviroment_data = data["environment"]
         device_data = data["device"]
 
         step = self.STEP_HYGROMETER
         #step = self.STEP_ENVIRONMENT
-        #step = self.STEP_7DAY_HISTORICAL
+        # step = self.STEP_7DAY_HISTORICAL
 
         self.flush()
         # new display frame
@@ -350,7 +387,7 @@ class EPaper:
 
         if step == self.STEP_HYGROMETER:
             self.draw_hygrometer_data(hygrometer_data)
-    
+
         if step == self.STEP_24HR_HISTORICAL:
             self.draw_historical_data(self.HOURS_IN_DAY)
 
@@ -382,10 +419,9 @@ class EPaper:
 
         #     if step == self.STEP_ENVIRONMENT:
 
-
         #     if step == self.STEP_HYGROMETER:
         #         self.draw_hygrometer_data(hygrometer_data)
-        
+
         #     if step == self.STEP_24HR_HISTORICAL:
         #         self.draw_historical_data(self.HOURS_IN_DAY)
 
