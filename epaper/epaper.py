@@ -372,7 +372,7 @@ class EPaper:
         device_data = data["device"]
 
         step = self.STEP_HYGROMETER
-        #step = self.STEP_ENVIRONMENT
+        # step = self.STEP_ENVIRONMENT
         # step = self.STEP_7DAY_HISTORICAL
 
         self.flush()

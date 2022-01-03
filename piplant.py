@@ -20,6 +20,9 @@ class PiPlant(PolledSensor):
         self.debug = (
             utils.dehumanize(piplantconf["debug"]) if "debug" in piplantconf else False
         )
+        self.mock = (
+            utils.dehumanize(piplantconf["mock"]) if "mock" in piplantconf else False
+        )
 
         logging_cfg_path = os.path.join(cwd, "logging.ini")
         if self.debug:
@@ -63,7 +66,7 @@ class PiPlant(PolledSensor):
 
             for config in sensors_config:
                 package = config["package"]
-                sensor = DynamicPackage(package)
+                sensor = DynamicPackage(package, mock=self.mock)
                 sensors.append(sensor)
 
             return sensors
@@ -73,19 +76,19 @@ class PiPlant(PolledSensor):
 
             if "temperature" in env_config:
                 package = env_config["temperature"]["package"]
-                sensors["temperature"] = DynamicPackage(package)
+                sensors["temperature"] = DynamicPackage(package, mock=self.mock)
 
             if "humidity" in env_config:
                 package = env_config["humidity"]["package"]
-                sensors["humidity"] = DynamicPackage(package)
+                sensors["humidity"] = DynamicPackage(package, mock=self.mock)
 
             if "pressure" in env_config:
                 package = env_config["pressure"]["package"]
-                sensors["pressure"] = DynamicPackage(package)
+                sensors["pressure"] = DynamicPackage(package, mock=self.mock)
 
             if "brightness" in env_config:
                 package = env_config["brightness"]["package"]
-                sensors["brightness"] = DynamicPackage(package)
+                sensors["brightness"] = DynamicPackage(package, mock=self.mock)
 
             return sensors
 
@@ -111,7 +114,12 @@ class PiPlant(PolledSensor):
         # TODO: check type of manager
         lmconf = config["lightmanager"]
         self.schedulemanager = LIFXScheduleManager(lmconf, debug=self.debug)
-        self.livebodydetection = LIFXLiveBodyDetection(lmconf, debug=self.debug)
+        lbd_conf = lmconf["motion_detection"]
+        package = lbd_conf["package"]
+        motion_sensor = DynamicPackage(package, mock=self.mock)
+        self.livebodydetection = LIFXLiveBodyDetection(
+            motion_sensor, lmconf, debug=self.debug
+        )
         self.log.info("Processors initialized")
 
         # renderers
@@ -127,7 +135,7 @@ class PiPlant(PolledSensor):
                 if "skip_splash_screen" in dconf
                 else False
             )
-            epd = DynamicPackage(package)
+            epd = DynamicPackage(package, mock=self.mock)
             self.display = EPaper(epd, dconf, debug=self.debug)
             if not skip_splash_screen:
                 self.display.draw_splash_screen()
@@ -168,7 +176,7 @@ class PiPlant(PolledSensor):
         self.log.info("Processing...")
 
         _ = self._value
-        
+
         self.schedulemanager.process()
         self.livebodydetection.process()
         self._process_time = time.time()

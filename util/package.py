@@ -3,14 +3,15 @@ import importlib
 
 
 class DynamicPackage:
-    def __new__(cls, package):
+    def __new__(cls, package, mock=False):
         def import_pkg(pkg):
             log.info("Importing package {}".format(pkg))
             module = importlib.import_module(pkg)
             return getattr(module, class_name)
 
         kwargs = package["kwargs"] if "kwargs" in package else dict()
-        mock = kwargs["mock"] if "mock" in kwargs else False
+        if "mock" in kwargs:
+            mock = kwargs["mock"]
         path = package["module"]
         remote_path = package["remote_module"] if "remote_module" in package else None
 

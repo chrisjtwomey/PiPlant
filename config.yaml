@@ -8,7 +8,6 @@ piplant:
           module: sensors.hygrometer.aideepen
           class: CapacitiveHygrometer
           kwargs:
-            mock: true
             adc_channel: 1
             min_value: 0.30
             max_value: 0.70
@@ -17,7 +16,6 @@ piplant:
           module: sensors.hygrometer.aideepen
           class: CapacitiveHygrometer
           kwargs:
-            mock: true
             adc_channel: 2
             min_value: 0.30
             max_value: 0.68
@@ -26,7 +24,6 @@ piplant:
           module: sensors.hygrometer.aideepen
           class: CapacitiveHygrometer
           kwargs:
-            mock: true
             adc_channel: 3
             min_value: 0.30
             max_value: 0.67
@@ -36,42 +33,30 @@ piplant:
         package: 
           module: sensors.environment.dockerpi
           class: SensorHub
-          kwargs:
-            mock: true
       humidity:
         package: 
           module: sensors.environment.dockerpi
           class: SensorHub
-          kwargs:
-            mock: true
       pressure:
         package: 
           module: sensors.environment.dockerpi
           class: SensorHub
-          kwargs:
-            mock: true
       brightness:
         package: 
           module: sensors.environment.dockerpi
           class: SensorHub
-          kwargs:
-            mock: true
     device:
       - package: 
           module: sensors.device.raspberrypi
           class: DeviceStatistics
-          kwargs:
-            mock: true
 epaper:
   driver:
     package: 
       remote_module: rpi_epd3in7.epd
       module: epaper.driver.rpi_epd3in7
       class: EPD
-      kwargs:
-        mock: true
   enabled: true
-  refresh_interval: 1hr
+  refresh_interval: 5s
   skip_splash_screen: false
 lightmanager:
   autodiscovery: disabled
@@ -97,8 +82,6 @@ lightmanager:
     package: 
       module: sensors.environment.dockerpi
       class: SensorHub
-      kwargs:
-        mock: true
     timeout: 15m
     on_motion_trigger:
       transition: 0s

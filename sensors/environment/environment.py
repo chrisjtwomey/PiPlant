@@ -51,9 +51,7 @@ class PressureSensor(Sensor):
         super().__init__()
 
     def get_data(self) -> dict:
-        return {
-            "pressure": self.pressure
-        }
+        return {"pressure": self.pressure}
 
     @property
     def pressure(self) -> int:
@@ -66,9 +64,7 @@ class MotionSensor(Sensor):
         super().__init__()
 
     def get_data(self) -> dict:
-        return {
-            "motion": self.motion
-        }
+        return {"motion": self.motion}
 
     @property
     def motion(self) -> bool:

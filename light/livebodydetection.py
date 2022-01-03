@@ -9,13 +9,12 @@ class LiveBodyDetection:
     DEFAULT_MOTION_TIMEOUT = 30
     DEFAULT_TRANSITION_SECONDS = 0
 
-    def __init__(self, config, debug=False):
+    def __init__(self, motion_sensor, config, debug=False):
         self.log = logging.getLogger(self.__class__.__name__)
         self.debug = debug
         lbd_conf = config["motion_detection"]
 
-        package = lbd_conf["package"]
-        self.motion_sensor = DynamicPackage(package)
+        self.motion_sensor = motion_sensor
 
         self._pir_detection_time = 0
         self._motion_timeout_seconds = (
