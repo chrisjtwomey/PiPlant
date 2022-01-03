@@ -1,6 +1,6 @@
 import os
 import psutil
-from devicesensor import DeviceSensor
+from ..device import DeviceSensor
 from gpiozero import CPUTemperature, LoadAverage, DiskUsage
 
 
@@ -27,7 +27,7 @@ class DeviceStatistics(DeviceSensor):
         self._value = dict()
         self.log.debug("Initialized")
 
-    def get_value(self):
+    def get_data(self) -> dict:
         data = dict()
 
         data["cpu_temp"] = self._cpu.temperature

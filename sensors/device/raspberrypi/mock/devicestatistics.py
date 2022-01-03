@@ -1,22 +1,43 @@
 import random
-import random
-from ....sensor import Sensor
+from ...device import DeviceSensor
 
 
-class DeviceStatistics(Sensor):
+class DeviceStatistics(DeviceSensor):
     def __init__(self, **kwargs):
         super().__init__()
 
-    def get_value(self):
-        pass
+    @property
+    def cpu_temperature(self):
+        return random.randrange(0, 100)
 
-    def __iter__(self):
-        yield "cpu_temp", random.randrange(0, 100)
-        yield "cpu_throttle", random.randrange(False, True)
-        yield "cpu_usage_perc", random.randrange(0, 100)
-        yield "gpu_temp", random.randrange(0, 100)
-        yield "mem_usage_perc", random.randrange(0, 100)
-        yield "mem_total_mb", 1024
-        yield "disk_usage_perc", random.randrange(0, 100)
-        yield "disk_total_mb", 1024
-        # yield 'load_avg',         self.load_avg
+    @property
+    def cpu_throttle(self):
+        return random.choice([False, True])
+
+    @property
+    def cpu_usage_perc(self):
+        return random.randrange(0, 100)
+
+    @property
+    def gpu_temperature(self):
+        return random.randrange(0, 100)
+
+    @property
+    def memory_usage_perc(self):
+        return random.randrange(0, 100)
+
+    @property
+    def memory_total_mb(self):
+        return 8192
+
+    @property
+    def disk_usage_perc(self):
+        return random.randrange(0, 100)
+
+    @property
+    def disk_total_mb(self):
+        return 1024
+
+    @property
+    def load_avg(self):
+        return random.randrange(0.01, 1.00)

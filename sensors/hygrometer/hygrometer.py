@@ -4,11 +4,12 @@ from ..sensor import Sensor
 class Hygrometer(Sensor):
     def __init__(self, dry_value_percentage=50, **kwargs):
         self._dry_value_percentage = dry_value_percentage
+        super().__init__()
 
     def get_data(self) -> dict:
         return {
             "percentage": self.percentage,
-            "dry_threshold_percentage": self.dry_value_percentage,
+            "dry_value_percentage": self.dry_value_percentage,
             "is_dry": self.is_dry,
         }
 

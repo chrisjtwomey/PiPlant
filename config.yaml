@@ -56,7 +56,7 @@ epaper:
       module: epaper.driver.rpi_epd3in7
       class: EPD
   enabled: true
-  refresh_interval: 5s
+  refresh_interval: 1hr
   skip_splash_screen: false
 lightmanager:
   autodiscovery: disabled
@@ -79,9 +79,10 @@ lightmanager:
       - mac: d0:73:d5:6b:61:51
         ip: 192.168.1.39
   motion_detection:
-    package: 
-      module: sensors.environment.dockerpi
-      class: SensorHub
+    sensor:
+      package: 
+        module: sensors.environment.dockerpi
+        class: SensorHub
     timeout: 15m
     on_motion_trigger:
       transition: 0s

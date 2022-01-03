@@ -115,7 +115,7 @@ class PiPlant(PolledSensor):
         lmconf = config["lightmanager"]
         self.schedulemanager = LIFXScheduleManager(lmconf, debug=self.debug)
         lbd_conf = lmconf["motion_detection"]
-        package = lbd_conf["package"]
+        package = lbd_conf["sensor"]["package"]
         motion_sensor = DynamicPackage(package, mock=self.mock)
         self.livebodydetection = LIFXLiveBodyDetection(
             motion_sensor, lmconf, debug=self.debug

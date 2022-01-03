@@ -24,7 +24,7 @@ class DynamicPackage:
             pkg = path + ".mock." + class_name.lower()
             class_ = import_pkg(pkg)
         else:
-            pkg = path + class_name.lower()
+            pkg = path + "." + class_name.lower()
             if remote_path is not None:
                 pkg = remote_path
             class_ = import_pkg(pkg)

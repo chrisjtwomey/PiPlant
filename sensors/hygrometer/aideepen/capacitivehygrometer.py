@@ -25,11 +25,8 @@ class CapacitiveHygrometer(Hygrometer):
         def clamp(val, smallest, largest):
             return max(smallest, min(val, largest))
 
-        val = self._adc.value
-        min = self._calibrated_min_value
-        max = self._calibrated_max_value
-        val = clamp(val, min, max)
-        perc_of_max_in_range = 100 - round(perc_in_range(val, min, max))
+        val = clamp(self._adc.value, self._min_value, self._max_value)
+        perc_of_max_in_range = 100 - round(perc_in_range(val, self._min_value, self._max_value))
 
         return perc_of_max_in_range
 

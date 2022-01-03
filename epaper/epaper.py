@@ -88,7 +88,7 @@ class EPaper:
 
             sensor_val_percent = data["percentage"]
             poor_water = data["is_dry"]
-            poor_water_percent = data["dry_threshold_percentage"]
+            poor_water_percent = data["dry_value_percentage"]
             draw_value_text = False
             value_text = str(sensor_val_percent) + "%"
             # warning = data["error"]
@@ -123,7 +123,7 @@ class EPaper:
                 poor_water_level_ang = water_level_ang
 
             # draw plant icon
-            self.util.draw_image(sensor_icon, iX, iY, self.util.icon_size_very_large)
+            self.util.draw_image(sensor_icon, iX, iY, self.util.icon_size_large)
 
             if warning:
                 self.util.draw_image(warning_icon, iX, iY, self.util.icon_size_small)
@@ -241,10 +241,10 @@ class EPaper:
         self.log.debug("Drawing environment data")
 
         display_vals = {
-            "ext_temp": u"\N{DEGREE SIGN}C",
-            "onboard_brightness": "Lux",
-            "onboard_humidity": "%",
-            "baro_pressure": "hPa",
+            "temperature": u"\N{DEGREE SIGN}C",
+            "brightness": "Lux",
+            "humidity": "%",
+            "pressure": "hPa",
         }
 
         x, y = 0, self.height - self.header_height
@@ -289,19 +289,19 @@ class EPaper:
         # data_key = "onboard_temp"
         # draw_sensor_data(icon, data_key, sensor_unit_txt, x, inside_row_y)
 
-        icon = "onboard_brightness.png"
+        icon = "brightness.png"
         data_key = "brightness"
         sensor_unit_txt = "lux"
         x = init_x + sensor_margin * 3
         draw_sensor_data(icon, data_key, sensor_unit_txt, x, outside_row_y)
 
-        icon = "onboard_humidity.png"
+        icon = "humidity.png"
         data_key = "humidity"
         sensor_unit_txt = "%"
         x = init_x + sensor_margin * 1.6
         draw_sensor_data(icon, data_key, sensor_unit_txt, x, inside_row_y)
 
-        icon = "baro_pressure.png"
+        icon = "pressure.png"
         data_key = "pressure"
         sensor_unit_txt = "hPa"
         x = init_x + sensor_margin * 3
