@@ -12,6 +12,8 @@ This project is designed to not require specific hardware to run. See [Adding or
 * [Aideepen Capacitive Soil Moisture Sensor v1.2](https://www.aideepen.com/products/capacitive-soil-moisture-sensor-module-not-easy-to-corrode-wide-voltage-wire-3-3-5-5v-corrosion-resistant-w-gravity-for-arduino)
 * [DockerPi SensorHub v2.0](https://wiki.52pi.com/index.php?title=EP-0106)
 * [MCP3008 ADC](https://www.adafruit.com/product/856)
+* [LIFX A60](https://lifxshop.eu/products/lifx-colour-e27)
+* [LIFX Z](https://lifxshop.eu/products/lifx-lightstrip-2m)
 
 
 # Installation
@@ -87,10 +89,142 @@ This project is designed to not require specific hardware to run. See [Adding or
     python3 piplant.py
     ```
 
-# Configuration
+## Run PiPlant in mock-mode without Raspberry Pi
 
-Coming soon...
+You can run PiPlant without the need for real-life sensors. Each sensor package currently in PiPlant has a mock class that is used when PiPlant is configured in mock-mode.
+
+To enable mock-mode, add `mock: true` to the PiPlant `config.yaml`:
+```
+---
+piplant:
+  mock: true
+```
+
+Individual sensors can also be run in mock-mode, for example:
+```
+sensors:
+    hygrometers:
+      - package: 
+          module: sensors.hygrometer.aideepen
+          class: CapacitiveHygrometer
+          kwargs:
+            mock: true
+```
 
 # Adding or Changing Sensors
 
 Coming soon...
+
+# Configuration
+
+## PiPlant
+
+| Property      | Description                                        | Default |
+|---------------|----------------------------------------------------|---------|
+| poll_interval | The time to wait between data refreshes            | 5s      |
+| debug         | Flag to turn on verbose logging                    | False   |
+| mock          | Flag to enable mock-mode on all sensors            | False   |
+| sensors       | A dictionary containing the lists of sensor types  |         |
+
+### Sensors
+
+| Property    | Description                                                                                     | Default |
+|-------------|-------------------------------------------------------------------------------------------------|---------|
+| Hygrometers | A list of hygrometer sensors that measures soil moisture for each plant                         |         |
+| Environment | A dictionary of environment sensor packages for temperature, humidity, pressure, and brightness |         |
+| Device      | A list of device sensors that measure Raspberry Pi performance stats                            |         |
+
+#### Environment
+
+| Property    | Description                                                                              | Default |
+|-------------|------------------------------------------------------------------------------------------|---------|
+| Temperature | A sensor of type `TemperatureSensor` that returns the air temperature in degrees Celsius |         |
+| Humidity    | A sensor of type `HumiditySensor` that returns the air humidity as a percentage          |         |
+| Pressure    | A sensor of type `PressureSensor` that returns the air pressure as hectopascals          |         |
+| Brightness  | A sensor of type `BrightnessSensor` that returns the brightness as lux                   |         |
+
+### Sensor
+
+```
+package: 
+  module: sensors.hygrometer.aideepen
+  class: CapacitiveHygrometer
+  kwargs:
+    mock: true
+```
+
+| Property      | Description                                                                                             | Required |
+|---------------|---------------------------------------------------------------------------------------------------------|----------|
+| module        | The absolute or relative path of the module that contains the real sensor class or mock class           | Yes      |
+| remote_module | The name of the remote module that contains the real sensor, loaded via Pip                             | No       |
+| kwargs        | A dictionary containing the key-value arguments that are passed into the class instance __init__ method | No       |
+
+
+## EPaper
+
+| Property           | Description                                                                      | Default |
+|--------------------|----------------------------------------------------------------------------------|---------|
+| driver             | Contains the package of the ePaper driver to communicate with the ePaper display |         |
+| enabled            | A flag to render to the ePaper display or not                                    | True    |
+| refresh_interval   | The time to wait between refreshing the ePaper display                           | 1hr     |
+| skip_splash_screen | A flag to display the PiPlant logo on start-up or not                            | False   |
+
+## LightManager
+
+| Property              | Description                                                                                     | Default |
+|-----------------------|-------------------------------------------------------------------------------------------------|---------|
+| autodiscovery         | A flag to automatically discover light devices of a certain `device_type` (not implemented yet) | False   |
+| device_query_interval | The time to wait between refreshing the light devices current status                            | 2m      |
+| device_type           | The type of light device manager to use                                                         | lifx    |
+| device_groups         | A list of groups of device lights for schedules or motion detection managers                            |         |
+| motion_detection      | A config block for configuration motion-detection triggered lights                              |         |
+| schedules             | A list of schedules for transitioning light HSBKs                                               |         |
+
+### device_group
+
+```
+device_groups:
+  - <group_name>:
+      - mac: <mac address>
+        ip: <ip address>
+```
+
+| Property | Description                                   | Required |
+|----------|-----------------------------------------------|----------|
+| mac      | The mac address of the light device           | Yes      |
+| ip       | The accessible IP address of the light device | Yes      |
+
+### motion_detection
+
+| Property      | Description                                                        | Default |
+|---------------|--------------------------------------------------------------------|---------|
+| sensor        | Contains the package of the motion detection sensor                |         |
+| timeout       | The time to wait to turn of light device if no motion was detected | 15m     |
+| device_groups | A list of `device_group` names for the motion detection to manage  |         |
+
+#### on_motion_trigger / on_motion_timeout
+
+| Property      | Description                                                       | Default |
+|---------------|-------------------------------------------------------------------|---------|
+| transition    | The time to fade to the target `hsbk` state                       |         |
+| hsbk          | The target HSBK state                                             | 15m     |
+| device_groups | A list of `device_group` names for the motion detection to manage |         |
+
+### schedule
+
+
+| Property      | Description                                                                        | Default |
+|---------------|------------------------------------------------------------------------------------|---------|
+| name          | The name of the schedule                                                           |         |
+| time          | A 24-hour time string (eg. "13:00") of when the current schedule will be triggered | 15m     |
+| hsbk          | The target HSBK state                                                              |         |
+| device_groups | A list of `device_group` names for the schedule to manage                          |         |
+
+#### HSBK
+
+| Property   | Description                                    |
+|------------|------------------------------------------------|
+| hue        | An integer for the hue value (0-65535)         |
+| saturation | An integer for the saturation value (0-65535)  |
+| brightness | An percentage string for the brightness value  |
+| kelvin     | An integer for the kelvin value (2500-9000)    |
