@@ -1,7 +1,6 @@
 ---
 piplant:
   poll_interval: 5s
-  debug: true
   sensors:
     hygrometers:
       - package: 

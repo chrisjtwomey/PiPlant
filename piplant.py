@@ -2,6 +2,7 @@ import os
 import yaml
 import math
 import time
+import argparse
 import logging.config
 import util.utils as utils
 from util.package import DynamicPackage
@@ -12,21 +13,21 @@ from light.lifxlivebodydetection import LIFXLiveBodyDetection
 
 cwd = os.path.dirname(os.path.realpath(__file__))
 
+parser = argparse.ArgumentParser()
+parser.add_argument('-c', '--config', type=argparse.FileType('r'), required=True, help='The path of the config yaml file')
+parser.add_argument('-m', '--mock', action='store_true', default=False, help='Flag to enable mock mode')
+parser.add_argument('-d', '--debug', action='store_true', default=False, help='Flag to enable verbose logging')
 
 class PiPlant(PolledSensor):
-    def __init__(self, config):
+    def __init__(self, config, mock=False, debug=False):
         piplantconf = config["piplant"]
 
-        self.debug = (
-            utils.dehumanize(piplantconf["debug"]) if "debug" in piplantconf else False
-        )
-        self.mock = (
-            utils.dehumanize(piplantconf["mock"]) if "mock" in piplantconf else False
-        )
+        self.debug = debug
+        self.mock = mock
 
-        logging_cfg_path = os.path.join(cwd, "logging.ini")
+        logging_cfg_path = os.path.join(cwd, "static", "logging.ini")
         if self.debug:
-            logging_cfg_path = os.path.join(cwd, "logging.dev.ini")
+            logging_cfg_path = os.path.join(cwd, "static", "logging.dev.ini")
 
         logging.config.fileConfig(logging_cfg_path)
 
@@ -207,13 +208,13 @@ class PiPlant(PolledSensor):
 
 
 if __name__ == "__main__":
-    cfg_path = os.path.join(cwd, "config.yaml")
-    with open(cfg_path, "r") as fs:
-        config = yaml.safe_load(fs)
-        ppm = PiPlant(config)
+    args = parser.parse_args()
 
-        while True:
-            data = ppm.value
-            ppm.process(data)
-            ppm.render()
-            ppm.poll_pause()
+    config = yaml.safe_load(args.config)
+    ppm = PiPlant(config, mock=args.mock, debug=args.debug)
+
+    while True:
+        data = ppm.value
+        ppm.process(data)
+        ppm.render()
+        ppm.poll_pause()
