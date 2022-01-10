@@ -1,8 +1,19 @@
 import re
 import datetime
-from dateutil import parser
-import pytz
+import operator
+from functools import reduce  # forward compatibility for Python 3
 
+def get_by_path(root, items):
+    """Access a nested object in root by item sequence."""
+    return reduce(operator.getitem, items, root)
+
+def set_by_path(root, items, value):
+    """Set a value in a nested object in root by item sequence."""
+    get_by_path(root, items[:-1])[items[-1]] = value
+
+def del_by_path(root, items):
+    """Delete a key-value in a nested object in root by item sequence."""
+    del get_by_path(root, items[:-1])[items[-1]]
 
 def dehumanize(human_str):
     # ensure str
@@ -64,16 +75,15 @@ def _dehumanize_boolean(boolean_str):
         raise ValueError("Unable to parse boolean: {}".format(boolean_str))
 
 
-def hour_to_datetime(hour_str, tz=None):
-    nowdate = datetime.datetime.now(tz=tz)
+def hour_to_datetime(hour_str):
+    nowdate = datetime.datetime.now()
 
     nowdate_str = nowdate.strftime("%d/%m/%Y")
     nowdatetime_str = nowdate_str + " " + hour_str
 
     dt = datetime.datetime.strptime(nowdatetime_str, "%d/%m/%Y %H:%M")
-    dt_aware = pytz.utc.localize(dt)
 
-    return dt_aware
+    return dt
 
 
 def parse_hsbk_map(hsbk_map, max_value=65535):
@@ -90,3 +100,56 @@ def parse_hsbk_map(hsbk_map, max_value=65535):
     hsbk = [hue, sat, brightness, kelvin]
 
     return hsbk
+
+def find_paths_to_key(d, target_key):
+    def traverse(dic, path=None):
+        if not path:
+            path=[]
+        if isinstance(dic,dict):
+            for x in dic.keys():
+                local_path = path[:]
+                local_path.append(x)
+                for b in traverse(dic[x], local_path):
+                    yield b
+        else: 
+            yield path,dic
+    
+    target_paths = list()
+    paths = list(traverse(d))
+    for (keys, _) in paths:
+        if target_key in keys:
+            target_paths.append(keys)
+            break
+
+    return target_paths
+
+def get_config_prop_by_keys(config, keys, default=None, required=True, dehumanized=False):
+    val = default
+
+    traversed_config = config
+    for key in keys:
+        if key not in traversed_config:
+            if default is None and required is True:
+                raise KeyError("{} not in config but is required".format(key))
+            return default
+
+        traversed_config = traversed_config[key]   
+
+    val = traversed_config
+    if dehumanized:
+        val = dehumanize(val)
+
+    return val
+
+def get_config_prop(config, prop, default=None, required=True, dehumanized=False):
+    val = default
+    if prop not in config:
+        if default is None and required is True:
+            raise KeyError("{} not in config but is required".format(prop))
+        return default
+
+    val = config[prop]
+    if dehumanized:
+        val = dehumanize(val)
+
+    return val

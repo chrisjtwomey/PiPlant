@@ -77,7 +77,7 @@ env.bak/
 venv.bak/
 
 # static test
-static/testframe.png
+pil-generated-frame.png
 
 # Debug
 *.log
@@ -87,5 +87,4 @@ piplant.log.*
 workspace.code-workspace
 .vscode/
 .devcontainer
-
-piplant-env
+piplant-env/

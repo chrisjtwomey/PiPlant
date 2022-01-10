@@ -1,145 +1,199 @@
 ---
 piplant:
   poll_interval: 5s
-  sensors:
-    hygrometers:
-      - package: 
-          module: sensors.hygrometer.aideepen
-          class: CapacitiveHygrometer
-          kwargs:
-            adc_channel: 1
-            min_value: 0.30
-            max_value: 0.70
-            dry_value_percentage: 25
-      - package: 
-          module: sensors.hygrometer.aideepen
-          class: CapacitiveHygrometer
-          kwargs:
-            adc_channel: 2
-            min_value: 0.30
-            max_value: 0.68
-            dry_value_percentage: 35
-      - package: 
-          module: sensors.hygrometer.aideepen
-          class: CapacitiveHygrometer
-          kwargs:
-            adc_channel: 3
-            min_value: 0.30
-            max_value: 0.67
-            dry_value_percentage: 10
-    environment:
-      temperature:
-        package: 
-          module: sensors.environment.dockerpi
-          class: SensorHub
-      humidity:
-        package: 
-          module: sensors.environment.dockerpi
-          class: SensorHub
-      pressure:
-        package: 
-          module: sensors.environment.dockerpi
-          class: SensorHub
-      brightness:
-        package: 
-          module: sensors.environment.dockerpi
-          class: SensorHub
-    device:
-      - package: 
-          module: sensors.device.raspberrypi
-          class: DeviceStatistics
-epaper:
-  driver:
+  display:
+    enabled: true
+    driver:
+      package_ref: epd
+    refresh_interval: 1hr
+    skip_splash_screen: false
+  hygrometers:
+    sensors:
+      package_refs:
+        - hygrometer-adc-1
+        - hygrometer-adc-2
+        - hygrometer-adc-3
+  device:
+    sensors:
+      package_refs:
+        - rpi-stats
+  environment:
+    temperature: 
+      sensors:
+        package_refs:
+          - sensorhub
+    humidity: 
+      sensors:
+        package_refs:
+          - sensorhub
+    brightness:
+      sensors:
+        package_refs:
+          - sensorhub
+    pressure: 
+      sensors:
+        package_refs:
+          - sensorhub
+    motion: 
+      sensors:
+        package_refs:
+          - sensorhub
+  lights:
+    schedule_manager:
+      enabled: true
+      device_query_interval: 2m
+      device_groups:
+        package_refs:
+          - lifx-group-plant-lights
+      schedules:
+        - name: sleep
+          time: "00:00"
+          hsbk:
+            brightness: 0%
+            kelvin: 2000
+        - name: wakeup
+          time: "07:30"
+          transition: 15m
+          hsbk:
+            brightness: 80%
+            kelvin: 2000
+        - name: daytime
+          time: "08:00"
+          transition: 10m
+          hsbk:
+            brightness: 100%
+            kelvin: 5000
+        - name: evening
+          time: "20:00"
+          transition: 5h
+          hsbk:
+            brightness: 80%
+            kelvin: 3500
+        - name: nightlight
+          time: "21:00"
+          transition: 10m
+          hsbk:
+            brightness: 65%
+            kelvin: 2750
+        - name: sleep
+          time: "23:00"
+          transition: 1m
+          hsbk:
+            brightness: 0%
+            kelvin: 2000
+    motion_trigger_manager:
+      enabled: true
+      timeout: 15m
+      sensors:
+        package_refs:
+          - sensorhub
+      device_groups:
+        package_refs:
+          - lifx-group-plant-lights
+      on_motion_trigger:
+        transition: 0s
+        hsbk:
+          brightness: 45%
+          kelvin: 3000
+      on_motion_timeout:
+        transition: 5s
+        hsbk:
+          brightness: 0%
+          kelvin: 3000
+packages:
+  - name: hygrometer-adc-1
+    package: 
+      module: sensor.hygrometer.aideepen
+      kwargs:
+        adc_channel: 1
+        min_value: 0.30
+        max_value: 0.70
+        dry_value_percentage: 25
+  - name: hygrometer-adc-2
+    package: 
+      module: sensor.hygrometer.aideepen
+      kwargs:
+        adc_channel: 2
+        min_value: 0.30
+        max_value: 0.68
+        dry_value_percentage: 35
+  - name: hygrometer-adc-3
+    package: 
+      module: sensor.hygrometer.aideepen.capacitivehygrometer
+      kwargs:
+        adc_channel: 3
+        min_value: 0.30
+        max_value: 0.67
+        dry_value_percentage: 10
+  - name: sensorhub
+    package: 
+      module: sensor.environment.dockerpi.sensorhub
+  - name: rpi-stats
+    package: 
+      module: sensor.device.raspberrypi.devicestatistics
+  - name: epd
     package: 
       remote_module: rpi_epd3in7.epd
-      module: epaper.driver.rpi_epd3in7
-      class: EPD
-  enabled: true
-  refresh_interval: 1hr
-  skip_splash_screen: false
-lightmanager:
-  autodiscovery: disabled
-  geo_city: "Dublin"
-  device_query_interval: 2m
-  device_type: lifx
-  device_groups:
-    - motion_lights:
-      - mac: d0:73:d5:6d:8f:b1
+      module: display.driver
+  - name: lifx-desk-corner-lamp-1
+    package:
+      remote_module: lifxlan.light
+      module: light.device
+      kwargs:
+        mac: d0:73:d5:6d:8f:b1
         ip: 192.168.1.27
-      - mac: d0:73:d5:43:c8:eb
-        ip: 192.168.1.40 
-    - desk_lamp:
-      - mac: d0:73:d5:6b:cc:29
-        ip: 192.168.1.28
-      - mac: d0:73:d5:6D:59:2d
+  - name: lifx-desk-corner-lamp-2
+    package:
+      remote_module: lifxlan.light
+      module: light.device
+      kwargs:
+        mac: d0:73:d5:6D:59:2d
         ip: 192.168.1.29 
-      - mac: d0:73:d5:6a:12:7a
+  - name: lifx-desk-corner-lamp-3
+    package:
+      remote_module: lifxlan.light
+      module: light.device
+      kwargs:
+        mac: d0:73:d5:6a:12:7a
         ip: 192.168.1.30
-      - mac: d0:73:d5:6b:61:51
+  - name: lifx-desk-lamp
+    package:
+      remote_module: lifxlan.light
+      module: light.device
+      kwargs:
+        mac: d0:73:d5:6b:61:51
         ip: 192.168.1.39
-  motion_detection:
-    sensor:
-      package: 
-        module: sensors.environment.dockerpi
-        class: SensorHub
-    timeout: 15m
-    on_motion_trigger:
-      transition: 0s
-      hsbk:
-        brightness: 45%
-        kelvin: 3000
-    on_motion_timeout:
-      transition: 5s
-      hsbk:
-        brightness: 0%
-        kelvin: 3000
-    device_groups:
-      - motion_lights
-  schedules:
-    - name: sleep
-      time: "00:00"
-      hsbk:
-        brightness: 0%
-        kelvin: 2000
-      device_groups:
-        - desk_lamp
-    - name: wakeup
-      time: "07:30"
-      transition: 15m
-      hsbk:
-        brightness: 80%
-        kelvin: 2000
-      device_groups:
-        - desk_lamp
-    - name: daytime
-      time: "08:00"
-      transition: 10m
-      hsbk:
-        brightness: 100%
-        kelvin: 5000
-      device_groups:
-        - desk_lamp
-    - name: evening
-      time: "20:00"
-      transition: 5h
-      hsbk:
-        brightness: 80%
-        kelvin: 3500
-      device_groups:
-        - desk_lamp
-    - name: nightlight
-      time: "21:00"
-      transition: 10m
-      hsbk:
-        brightness: 65%
-        kelvin: 2750
-      device_groups:
-        - desk_lamp
-    - name: sleep
-      time: "23:00"
-      transition: 1m
-      hsbk:
-        brightness: 0%
-        kelvin: 2000
-      device_groups:
-        - desk_lamp
+  - name: lifx-corner-lamp
+    package:
+      remote_module: lifxlan.light
+      module: light.device
+      kwargs:
+        mac: d0:73:d5:6d:8f:b1
+        ip: 192.168.1.27
+  - name: lifx-desk-strip
+    package:
+      remote_module: lifxlan.light
+      module: light.device
+      kwargs:
+        mac: d0:73:d5:43:c8:eb
+        ip: 192.168.1.40 
+  - name: lifx-group-plant-lights
+    package:
+      module: light.device_group.lifx.device_group
+      kwargs:
+        name: desk_lamp
+        devices:
+          package_refs:
+            - lifx-desk-lamp
+            - lifx-desk-corner-lamp-1
+            - lifx-desk-corner-lamp-2
+            - lifx-desk-corner-lamp-3
+  - name: lifx-group-motion-lights
+    package:
+      module: light.device_group.lifx.device_group
+      kwargs:
+        name: motion_lights
+        devices:
+          package_refs:
+            - lifx-corner-lamp
+            - lifx-desk-strip

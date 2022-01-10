@@ -1,12 +1,12 @@
 pyyaml>=6.0
 Pillow>=2.6.1
-#RPi.GPIO>=0.6.3
+#RPi.GPIO>=0.6.3 
 RPi.GPIO==0.7.1a4
 spidev>=3.0
 gpiozero>=1.6.2
 flask>=1.0.2
 smbus>=1.1.post2
-astral>=2.2
+#astral>=2.2
 matplotlib==3.4.3
 scipy>=1.7.1
 numpy>=1.21.2

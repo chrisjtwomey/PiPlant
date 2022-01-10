@@ -1,3 +1,4 @@
+import sys
 import os
 import yaml
 import math
@@ -5,39 +6,71 @@ import time
 import argparse
 import logging.config
 import util.utils as utils
-from util.package import DynamicPackage
-from epaper.epaper import EPaper
-from sensors.polledsensor import PolledSensor
-from light.lifxschedulemanager import LIFXScheduleManager
-from light.lifxlivebodydetection import LIFXLiveBodyDetection
+from package.package import DynamicPackage
+from display.epaper import EPaper
+from sensor.polledsensor import PolledSensor
+from light_manager.schedule_manager.schedule_manager import ScheduleManager
+from light_manager.motion_trigger_manager.motion_trigger_manager import MotionTriggerManager
 
 cwd = os.path.dirname(os.path.realpath(__file__))
 
 parser = argparse.ArgumentParser()
-parser.add_argument('-c', '--config', type=argparse.FileType('r'), required=True, help='The path of the config yaml file')
-parser.add_argument('-m', '--mock', action='store_true', default=False, help='Flag to enable mock mode')
-parser.add_argument('-d', '--debug', action='store_true', default=False, help='Flag to enable verbose logging')
+parser.add_argument(
+    "-c",
+    "--config",
+    type=argparse.FileType("r"),
+    required=True,
+    help="The path of the PiPlant config yaml",
+)
+parser.add_argument(
+    "-m", "--mock", action="store_true", default=False, help="Flag to enable mock mode"
+)
+parser.add_argument(
+    "-d",
+    "--debug",
+    action="store_true",
+    default=False,
+    help="Flag to enable verbose logging",
+)
+
 
 class PiPlant(PolledSensor):
-    def __init__(self, config, mock=False, debug=False):
-        piplantconf = config["piplant"]
-
+    def __init__(self, config, poll_interval="5s", mock=False, debug=False):
         self.debug = debug
         self.mock = mock
 
-        logging_cfg_path = os.path.join(cwd, "static", "logging.ini")
+        self.config_path = os.path.join(cwd, "config")
+
+        logging_cfg_path = os.path.join(self.config_path, "logging.ini")
         if self.debug:
-            logging_cfg_path = os.path.join(cwd, "static", "logging.dev.ini")
+            logging_cfg_path = os.path.join(self.config_path, "logging.dev.ini")
 
         logging.config.fileConfig(logging_cfg_path)
 
-        self._poll_interval_seconds = utils.dehumanize(piplantconf["poll_interval"])
-        dconf = config["epaper"]
-        self._render_interval_seconds = utils.dehumanize(dconf["refresh_interval"])
+        self._poll_interval_seconds = utils.dehumanize(poll_interval)
         self._process_time = 0
         self._render_time = 0
 
         super().__init__(self._poll_interval_seconds)
+
+        packages_config = utils.get_config_prop(config, "packages")
+
+        ppconfig = config["piplant"]
+        display_config = utils.get_config_prop(ppconfig, "display", required=False)
+        hygrometers_config = utils.get_config_prop(ppconfig, "hygrometers")
+        environment_config = utils.get_config_prop(ppconfig, "environment")
+        device_config = utils.get_config_prop(ppconfig, "device")
+        lights_config = utils.get_config_prop(ppconfig, "lights", required=False)
+
+        self.schedule_manager = None
+        self.motion_trigger_manager = None
+
+        self._display_enabled = utils.get_config_prop(
+            display_config, "enabled", default="false", required=False, dehumanized=True
+        )
+        self._render_interval_seconds = utils.get_config_prop(
+            display_config, "refresh_interval", default="1hr", dehumanized=True
+        )
 
         self.log.info(
             r"""\
@@ -57,87 +90,119 @@ class PiPlant(PolledSensor):
         )
 
         if self.debug:
-            self.log.info("DEBUG MODE")
+            self.log.info("In global debug mode")
 
-        # sensors
-        self.log.info("Initializing sensors...")
+        if self.mock:
+            self.log.info("In global mock mode")
 
-        def init_sensors(sensors_config):
-            sensors = []
+        self.log.info("Initializing packages...")
+        self._package_instances = dict()
+        try:
+            self._package_instances = self._get_package_instances_from_config(
+                packages_config, self.mock
+            )
+        except ModuleNotFoundError as mnfe:
+            self.log.error(mnfe)
+            sys.exit(1)
+        except Exception as e:
+            raise e
 
-            for config in sensors_config:
-                package = config["package"]
-                sensor = DynamicPackage(package, mock=self.mock)
-                sensors.append(sensor)
+        ######################################################################
+        # sensor packages
+        ######################################################################
 
-            return sensors
+        self.log.info("Initializing sensors")
+        self.hygrometers = self.get_pkg_instances_from_sensor_config(hygrometers_config)
 
-        def init_env_sensors(env_config):
-            sensors = dict()
-
-            if "temperature" in env_config:
-                package = env_config["temperature"]["package"]
-                sensors["temperature"] = DynamicPackage(package, mock=self.mock)
-
-            if "humidity" in env_config:
-                package = env_config["humidity"]["package"]
-                sensors["humidity"] = DynamicPackage(package, mock=self.mock)
-
-            if "pressure" in env_config:
-                package = env_config["pressure"]["package"]
-                sensors["pressure"] = DynamicPackage(package, mock=self.mock)
-
-            if "brightness" in env_config:
-                package = env_config["brightness"]["package"]
-                sensors["brightness"] = DynamicPackage(package, mock=self.mock)
-
-            return sensors
-
-        sensorsconfig = piplantconf["sensors"]
-
-        hygrometers_config = (
-            sensorsconfig["hygrometers"] if "hygrometers" in sensorsconfig else []
+        self.environment_sensors = {
+            "temperature": [],
+            "humidity": [],
+            "pressure": [],
+            "brightness": [],
+        }
+        env_temp_config = utils.get_config_prop(
+            environment_config, "temperature", required=False
         )
-        self.hygrometers = init_sensors(hygrometers_config)
+        self.environment_sensors[
+            "temperature"
+        ] = self.get_pkg_instances_from_sensor_config(env_temp_config)
 
-        environment_config = (
-            sensorsconfig["environment"] if "environment" in sensorsconfig else dict()
+        env_hum_config = utils.get_config_prop(
+            environment_config, "humidity", required=False
         )
-        self.environment_sensors = init_env_sensors(environment_config)
+        self.environment_sensors[
+            "humidity"
+        ] = self.get_pkg_instances_from_sensor_config(env_hum_config)
 
-        device_config = sensorsconfig["device"] if "device" in sensorsconfig else []
-        self.device_sensors = init_sensors(device_config)
-
-        self.log.info("Sensors initialized")
-
-        # processors
-        self.log.info("Initializing processors...")
-        # TODO: check type of manager
-        lmconf = config["lightmanager"]
-        self.schedulemanager = LIFXScheduleManager(lmconf, debug=self.debug)
-        lbd_conf = lmconf["motion_detection"]
-        package = lbd_conf["sensor"]["package"]
-        motion_sensor = DynamicPackage(package, mock=self.mock)
-        self.livebodydetection = LIFXLiveBodyDetection(
-            motion_sensor, lmconf, debug=self.debug
+        env_press_config = utils.get_config_prop(
+            environment_config, "pressure", required=False
         )
-        self.log.info("Processors initialized")
+        self.environment_sensors[
+            "pressure"
+        ] = self.get_pkg_instances_from_sensor_config(env_press_config)
 
-        # renderers
-        self.log.info("Initializing display...")
-        dconf = config["epaper"]
-        self._display_enabled = utils.dehumanize(dconf["enabled"])
+        env_bright_config = utils.get_config_prop(
+            environment_config, "brightness", required=False
+        )
+        self.environment_sensors[
+            "brightness"
+        ] = self.get_pkg_instances_from_sensor_config(env_bright_config)
+
+        self.device_sensors = self.get_pkg_instances_from_sensor_config(device_config)
+
+        ######################################################################
+        # light manager packages
+        ######################################################################
+
+        sm_config = utils.get_config_prop(lights_config, "schedule_manager")
+        enabled = utils.get_config_prop(
+            sm_config, "enabled", default="false", dehumanized=True
+        )
+        if enabled:
+            self.log.info("Initializing lights schedule manager")
+            schedules = utils.get_config_prop(sm_config, "schedules", required=True)
+            device_groups_config = utils.get_config_prop(sm_config, "device_groups", required=True)
+            package_refs = utils.get_config_prop(device_groups_config, "package_refs", required=True)
+            device_groups = self.get_package_instances(package_refs)
+            
+            self.schedule_manager = ScheduleManager(schedules, device_groups)
+
+        mtm_config = utils.get_config_prop(lights_config, "motion_trigger_manager")
+        enabled = utils.get_config_prop(mtm_config, "enabled", default="false")
+        enabled = utils.dehumanize(enabled)
+
+        if enabled:
+            self.log.info("Initializing light motion trigger manager")
+            motion_sensors_config = utils.get_config_prop(mtm_config, "sensors", required=True)
+            package_refs = utils.get_config_prop(motion_sensors_config, "package_refs", required=True)
+            motion_sensors = self.get_package_instances(package_refs)
+
+            device_groups_config = utils.get_config_prop(mtm_config, "device_groups", required=True)
+            package_refs = utils.get_config_prop(device_groups_config, "package_refs", required=True)
+            device_groups = self.get_package_instances(package_refs)
+
+            on_motion_trigger_config = utils.get_config_prop(mtm_config, "on_motion_trigger", required=True)
+            on_motion_timeout_config = utils.get_config_prop(mtm_config, "on_motion_timeout", required=True)
+
+            self.motion_trigger_manager = MotionTriggerManager(motion_sensors, on_motion_trigger_config, on_motion_timeout_config, device_groups)
+
+        self.log.info("Packages initialized")
+
+        ######################################################################
+        # display package
+        ######################################################################
 
         if self._display_enabled:
-            driver = dconf["driver"]
-            package = driver["package"]
-            skip_splash_screen = (
-                utils.dehumanize(dconf["skip_splash_screen"])
-                if "skip_splash_screen" in dconf
-                else False
+            self.log.info("Initializing display")
+            driver_config = utils.get_config_prop(display_config, "driver")
+            packageref = utils.get_config_prop(driver_config, "package_ref")
+            display_driver = self.get_package_instance(packageref)
+
+            skip_splash_screen = utils.get_config_prop(
+                display_config, "skip_splash_screen", default="false", dehumanized=True
             )
-            epd = DynamicPackage(package, mock=self.mock)
-            self.display = EPaper(epd, dconf, debug=self.debug)
+
+            self.display = EPaper(display_driver, display_config, debug=self.debug)
             if not skip_splash_screen:
                 self.display.draw_splash_screen()
             self.log.info("Display initialized")
@@ -158,12 +223,18 @@ class PiPlant(PolledSensor):
             hygrometer_data.append(sensor.data)
 
         environment_data = dict()
-        for sensortype, sensor in self.environment_sensors.items():
-            environment_data[sensortype] = sensor.data[sensortype]
+        for sensortype, sensors in self.environment_sensors.items():
+            sensordata = []
+            for sensor in sensors:
+                sensordata.append(sensor.data)
+            environment_data[sensortype] = sensordata
 
         device_data = []
         for sensor in self.device_sensors:
-            device_data.append(sensor.data)
+            sensordata = []
+            for sensor in sensors:
+                sensordata.append(sensor.data)
+            device_data.append(sensordata)
 
         data_payload = {
             "hygrometer": hygrometer_data,
@@ -178,8 +249,12 @@ class PiPlant(PolledSensor):
 
         _ = self._value
 
-        self.schedulemanager.process()
-        self.livebodydetection.process()
+        if self.schedule_manager is not None:
+            self.schedule_manager.process()
+
+        if self.motion_trigger_manager is not None:
+            self.motion_trigger_manager.process()
+
         self._process_time = time.time()
 
         # save to db
@@ -206,12 +281,57 @@ class PiPlant(PolledSensor):
         self.log.debug("Pausing for {} seconds...".format(seconds))
         time.sleep(seconds)
 
+    def get_package_instance(self, name):
+        return self._package_instances[name]
+
+    def get_package_instances(self, names):
+        return [self.get_package_instance(name) for name in names]
+
+    def _get_package_instances_from_config(self, packages, mock=False):
+        instances = dict()
+        for pkg in packages:
+            name = utils.get_config_prop(pkg, "name", required=True)
+            package = utils.get_config_prop(pkg, "package", required=True)
+            kwargs = utils.get_config_prop(package, "kwargs", required=False)
+
+            if kwargs is not None:
+                paths = utils.find_paths_to_key(kwargs, "package_refs") 
+                for keys in paths:
+                    package_refs = utils.get_by_path(kwargs, keys)
+                    insts = [instances[name] for name in package_refs]
+                    utils.del_by_path(kwargs, keys)
+                    utils.set_by_path(kwargs, keys[:-1], insts)
+
+                paths = utils.find_paths_to_key(kwargs, "package_ref") 
+                for keys in paths:
+                    package_ref = utils.get_by_path(kwargs, keys)
+                    inst = instances[package_ref]
+                    utils.del_by_path(kwargs, keys)
+                    utils.set_by_path(kwargs, keys[:-1], inst)
+
+            instance = DynamicPackage(package, mock)
+            instances[name] = instance
+
+        return instances
+
+    def get_pkg_instances_from_sensor_config(self, config):
+        sensor_config = utils.get_config_prop(config, "sensors", required=True)
+        package_refs = utils.get_config_prop(
+            sensor_config, "package_refs", required=True
+        )
+
+        return self.get_package_instances(package_refs)
+
 
 if __name__ == "__main__":
     args = parser.parse_args()
 
     config = yaml.safe_load(args.config)
-    ppm = PiPlant(config, mock=args.mock, debug=args.debug)
+    if "piplant" not in config:
+        raise ValueError("PiPlant config not found - is this the correct config file?")
+
+    poll_interval = config["piplant"]["poll_interval"]
+    ppm = PiPlant(config, poll_interval, mock=args.mock, debug=args.debug)
 
     while True:
         data = ppm.value

@@ -64,7 +64,7 @@ This project is designed to not require specific hardware to run. See [Adding or
 
 4. Run the built docker image:
     ```
-    sudo docker run -d --name piplant --privileged piplant:latest
+    sudo docker run -d --name piplant --privileged piplant:latest -- --config config/piplant.yaml
     ```
     The container needs the `--privileged` flag to access the GPIO pins.
 
@@ -107,11 +107,9 @@ This project is designed to not require specific hardware to run. See [Adding or
 
 You can run PiPlant without the need for real-life sensors. Each sensor package currently in PiPlant has a mock class that is used when PiPlant is configured in mock-mode.
 
-To enable mock-mode, add `mock: true` to the PiPlant `config.yaml`:
+To run in mock-mode, add `--mock` to the PiPlant's command-line arguments:
 ```
----
-piplant:
-  mock: true
+sudo docker run -d --name piplant --privileged piplant:latest -- --config config/piplant.yaml --mock
 ```
 
 Individual sensors can also be run in mock-mode, for example:
@@ -166,11 +164,8 @@ sensors:
 | Property      | Description                                        | Default |
 |---------------|----------------------------------------------------|---------|
 | poll_interval | The time to wait between data refreshes            | 5s      |
-| debug         | Flag to turn on verbose logging                    | False   |
-| mock          | Flag to enable mock-mode on all sensors            | False   |
-| sensors       | A dictionary containing the lists of sensor types  |         |
 
-### Sensors
+## Sensors
 
 | Property    | Description                                                                                     |
 |-------------|-------------------------------------------------------------------------------------------------|

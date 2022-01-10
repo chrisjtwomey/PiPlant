@@ -6,10 +6,11 @@ RUN wget https://archive.raspbian.org/raspbian.public.key -O - | apt-key add - \
     && apt-get update \
     && apt-get install -y libatlas-base-dev libraspberrypi-bin \
     && mkdir /piplant
-COPY static/pip.conf /etc/pip.conf
+COPY config/pip.conf /etc/pip.conf
 COPY requirements.txt requirements.txt
 RUN python3 -m venv piplant-env && . piplant-env/bin/activate
 RUN pip3 install --upgrade pip && python3 -m pip install -r requirements.txt --verbose
 
 COPY . /piplant
-CMD ["python3", "/piplant/piplant.py"]
+ENTRYPOINT ["python3", "/piplant/piplant.py"]
+CMD ["--config", "config/piplant.yaml"]
