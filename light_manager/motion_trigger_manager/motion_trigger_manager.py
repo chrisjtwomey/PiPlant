@@ -13,8 +13,7 @@ class MotionTriggerManager:
         on_motion_trigger,
         on_motion_timeout,
         device_groups,
-        timeout="60s",
-        device_query_interval="2m",
+        timeout="5m",
         debug=False,
     ):
         self.log = logging.getLogger(self.__class__.__name__)
@@ -39,51 +38,51 @@ class MotionTriggerManager:
             on_motion_timeout["transition"]
         )
 
+        self._current_hsbk = None
+
         self._devicegroups = device_groups
 
     def on_motion(self, hsbk, transition_seconds=0):
-        _, _, brightness, _ = hsbk
-
         for group in self._devicegroups:
             group.set_hsbk(hsbk, transition_seconds)
 
     def on_motion_trigger(self, hsbk, transition_seconds=0):
-        self.on_motion(hsbk, transition_seconds=transition_seconds)
-
-    def on_motion_timeout(self, hsbk, transition_seconds=0):
-        self.on_motion(hsbk, transition_seconds=transition_seconds)
-
-    def process(self):
-        motion_detection = any([sensor.motion for sensor in self.motion_sensors])
-
-        nowtime_naive = time.time()
-        if motion_detection:
-            if self.debug:
-                self.log.debug(
+        if self._current_hsbk != hsbk:
+            self.log.debug(
                     "on_motion_trigger:\n\tHSBK: {}\n\ttransition_seconds: {}".format(
                         self._on_motion_trigger_hsbk,
                         self._on_motion_timeout_transition,
                     )
                 )
-            else:
-                self.on_motion_trigger(
-                    self._on_motion_trigger_hsbk,
-                    transition_seconds=self._on_motion_trigger_transition,
+            self.on_motion(hsbk, transition_seconds=transition_seconds)
+            self._current_hsbk = hsbk
+
+    def on_motion_timeout(self, hsbk, transition_seconds=0):
+        if self._current_hsbk != hsbk:
+            self.log.debug(
+                    "on_motion_timeout:\n\tHSBK: {}\n\ttransition_seconds: {}".format(
+                        self._on_motion_trigger_hsbk,
+                        self._on_motion_timeout_transition,
+                    )
                 )
-            self._pir_detection_time = nowtime_naive
+            self.on_motion(hsbk, transition_seconds=transition_seconds)
+            self._current_hsbk = hsbk
+
+    def process(self):
+        motion_detection = any([sensor.motion for sensor in self.motion_sensors])
+
+        nowtime = time.time()
+        if motion_detection:
+            self.on_motion_trigger(
+                self._on_motion_trigger_hsbk,
+                transition_seconds=self._on_motion_trigger_transition,
+            )
+            self._pir_detection_time = nowtime
         else:
-            time_since_detection = math.ceil(nowtime_naive - self._pir_detection_time)
+            time_since_detection = math.ceil(nowtime - self._pir_detection_time)
 
             if time_since_detection >= self._motion_timeout_seconds:
-                if self.debug:
-                    self.log.debug(
-                        "on_motion_timeout:\n\tHSBK: {}\n\ttransition_seconds: {}".format(
-                            self._on_motion_trigger_hsbk,
-                            self._on_motion_timeout_transition,
-                        )
-                    )
-                else:
-                    self.on_motion_timeout(
-                        self._on_motion_timeout_hsbk,
-                        transition_seconds=self._on_motion_timeout_transition,
-                    )
+                self.on_motion_timeout(
+                    self._on_motion_timeout_hsbk,
+                    transition_seconds=self._on_motion_timeout_transition,
+                )

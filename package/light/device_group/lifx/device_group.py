@@ -3,19 +3,20 @@ from ..device_group import DeviceGroup
 
 
 class LifxDeviceGroup(DeviceGroup):
-    def __init__(self, name, devices):
+    def __init__(self, name, devices, query_interval="2m"):
         self.lifxgroup = Group(devices)
-        super().__init__(name, devices)
+        super().__init__(name, devices, query_interval)
 
     def get_devices(self) -> list:
         return self.lifxgroup.get_device_list()
 
     def set_power(self, power, transition_seconds=0) -> None:
-        try:
-            self.lifxgroup.set_power(power, duration=transition_seconds)
-            self.refresh()
-        except WorkflowException as e:
-            self.log.error("Error occurred communicating with LIFX lights")
+        if power != self.power:
+            try:
+                self.lifxgroup.set_power(power, duration=transition_seconds)
+                self.refresh()
+            except WorkflowException as e:
+                self.log.error("Error occurred communicating with LIFX lights")
 
     def get_power(self) -> list:
         try:
@@ -24,18 +25,19 @@ class LifxDeviceGroup(DeviceGroup):
             self.log.error("Error occurred communicating with LIFX lights")
 
     def set_hsbk(self, hsbk, transition_seconds=0) -> None:
-        brightness = hsbk[2]
+        if hsbk != self.hsbk:
+            brightness = hsbk[2]
 
-        try:
-            if brightness > 0:
-                self.set_power(True)
-            else:
-                self.set_power(False)
+            try:
+                if brightness > 0:
+                    self.set_power(True)
+                else:
+                    self.set_power(False)
 
-            self.lifxgroup.set_color(hsbk, duration=transition_seconds)
-            self.refresh()
-        except WorkflowException as e:
-            self.log.error("Error occurred communicating with LIFX lights")
+                self.lifxgroup.set_color(hsbk, duration=transition_seconds)
+                self.refresh()
+            except WorkflowException as e:
+                self.log.error("Error occurred communicating with LIFX lights")
 
     def get_hsbk(self) -> list:
         try:

@@ -1,6 +1,5 @@
 ---
 piplant:
-  poll_interval: 5s
   display:
     enabled: true
     driver:
@@ -89,21 +88,21 @@ piplant:
           - sensorhub
       device_groups:
         package_refs:
-          - lifx-group-plant-lights
+          - lifx-group-motion-lights
       on_motion_trigger:
         transition: 0s
         hsbk:
           brightness: 45%
           kelvin: 3000
       on_motion_timeout:
-        transition: 5s
+        transition: 10s
         hsbk:
           brightness: 0%
           kelvin: 3000
 packages:
   - name: hygrometer-adc-1
     package: 
-      module: sensor.hygrometer.aideepen
+      module: sensor.hygrometer.aideepen.capacitivehygrometer
       kwargs:
         adc_channel: 1
         min_value: 0.30
@@ -111,7 +110,7 @@ packages:
         dry_value_percentage: 25
   - name: hygrometer-adc-2
     package: 
-      module: sensor.hygrometer.aideepen
+      module: sensor.hygrometer.aideepen.capacitivehygrometer
       kwargs:
         adc_channel: 2
         min_value: 0.30
@@ -135,59 +134,61 @@ packages:
     package: 
       remote_module: rpi_epd3in7.epd
       module: display.driver
-  - name: lifx-desk-corner-lamp-1
+      kwargs:
+        mock: true
+  - name: lifx-desk-trio-left
     package:
       remote_module: lifxlan.light
       module: light.device
       kwargs:
-        mac: d0:73:d5:6d:8f:b1
-        ip: 192.168.1.27
-  - name: lifx-desk-corner-lamp-2
+        mac_addr: d0:73:d5:6d:59:2d
+        ip_addr: 192.168.1.29 
+  - name: lifx-desk-trio-middle
     package:
       remote_module: lifxlan.light
       module: light.device
       kwargs:
-        mac: d0:73:d5:6D:59:2d
-        ip: 192.168.1.29 
-  - name: lifx-desk-corner-lamp-3
+        mac_addr: d0:73:d5:6b:cc:29
+        ip_addr: 192.168.1.28
+  - name: lifx-desk-trio-right
     package:
       remote_module: lifxlan.light
       module: light.device
       kwargs:
-        mac: d0:73:d5:6a:12:7a
-        ip: 192.168.1.30
-  - name: lifx-desk-lamp
+        mac_addr: d0:73:d5:6a:12:7a
+        ip_addr: 192.168.1.30
+  - name: lifx-monitor-lamp
     package:
       remote_module: lifxlan.light
       module: light.device
       kwargs:
-        mac: d0:73:d5:6b:61:51
-        ip: 192.168.1.39
-  - name: lifx-corner-lamp
+        mac_addr: d0:73:d5:6b:61:51
+        ip_addr: 192.168.1.39
+  - name: lifx-office-corner-lamp
     package:
       remote_module: lifxlan.light
       module: light.device
       kwargs:
-        mac: d0:73:d5:6d:8f:b1
-        ip: 192.168.1.27
+        mac_addr: d0:73:d5:6d:8f:b1
+        ip_addr: 192.168.1.27
   - name: lifx-desk-strip
     package:
       remote_module: lifxlan.light
       module: light.device
       kwargs:
-        mac: d0:73:d5:43:c8:eb
-        ip: 192.168.1.40 
+        mac_addr: d0:73:d5:43:c8:eb
+        ip_addr: 192.168.1.40 
   - name: lifx-group-plant-lights
     package:
       module: light.device_group.lifx.device_group
       kwargs:
-        name: desk_lamp
+        name: plant_lights
         devices:
           package_refs:
-            - lifx-desk-lamp
-            - lifx-desk-corner-lamp-1
-            - lifx-desk-corner-lamp-2
-            - lifx-desk-corner-lamp-3
+            - lifx-monitor-lamp
+            - lifx-desk-trio-left
+            - lifx-desk-trio-middle
+            - lifx-desk-trio-right
   - name: lifx-group-motion-lights
     package:
       module: light.device_group.lifx.device_group
@@ -195,5 +196,5 @@ packages:
         name: motion_lights
         devices:
           package_refs:
-            - lifx-corner-lamp
+            - lifx-office-corner-lamp
             - lifx-desk-strip

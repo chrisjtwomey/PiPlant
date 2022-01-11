@@ -1,5 +1,5 @@
 import smbus
-from sensors.environment.environment import EnvironmentAll
+from ..environment import EnvironmentAll
 
 
 class SensorHub(EnvironmentAll):

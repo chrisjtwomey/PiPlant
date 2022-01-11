@@ -10,9 +10,9 @@ class DeviceGroup:
         self._query_interval_seconds = utils.dehumanize(query_interval)
         self._devices = devices
 
-        self._power = self.power
-        self._hsbk = self.hsbk
-        self._query_time = time.time()
+        self._power = [False] * len(devices)
+        self._hsbk = [[0, 0, 0, 0]] * len(devices)
+        self._query_time = 0
 
         self.log = logging.getLogger("{}.{}".format(self.__class__.__name__, self.name))
 
@@ -61,7 +61,7 @@ class DeviceGroup:
 
     @property
     def power(self) -> list:
-        if self.check_refresh:
+        if self.check_refresh():
             self.refresh()
 
         powers = self._power
@@ -70,7 +70,7 @@ class DeviceGroup:
 
     @property
     def hsbk(self) -> list:
-        if self.check_refresh:
+        if self.check_refresh():
             self.refresh()
 
         return self._hsbk
@@ -86,3 +86,5 @@ class DeviceGroup:
         self._power = self.get_power()
         self._hsbk = self.get_hsbk()
         self._query_time = time.time()
+
+        self.log.debug("refreshed device states:\n\tpower: {}\n\thsbk: {}".format(self._power, self._hsbk))

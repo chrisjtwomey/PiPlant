@@ -201,12 +201,14 @@ class PiPlant(PolledSensor):
             on_motion_timeout_config = utils.get_config_prop(
                 mtm_config, "on_motion_timeout", required=True
             )
+            timeout = utils.get_config_prop(mtm_config, "timeout")
 
             self.motion_trigger_manager = MotionTriggerManager(
                 motion_sensors,
                 on_motion_trigger_config,
                 on_motion_timeout_config,
                 device_groups,
+                timeout=timeout
             )
 
         self.log.info("Packages initialized")
@@ -288,8 +290,8 @@ class PiPlant(PolledSensor):
         self,
     ):
         now = time.time()
-        # if time to render
-        if math.ceil(now - self._render_time) >= self._render_interval_seconds:
+        seconds_since_render = math.ceil(now - self._render_time)
+        if seconds_since_render >= self._render_interval_seconds:
             self.log.info("Rendering...")
             data = self._value
 
@@ -353,8 +355,7 @@ if __name__ == "__main__":
     if "piplant" not in config:
         raise ValueError("PiPlant config not found - is this the correct config file?")
 
-    poll_interval = config["piplant"]["poll_interval"]
-    ppm = PiPlant(config, poll_interval, mock=args.mock, debug=args.debug)
+    ppm = PiPlant(config, mock=args.mock, debug=args.debug)
 
     while True:
         data = ppm.value
