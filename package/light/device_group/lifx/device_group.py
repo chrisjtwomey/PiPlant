@@ -16,7 +16,7 @@ class LifxDeviceGroup(DeviceGroup):
             self.refresh()
         except WorkflowException as e:
             self.log.error("Error occurred communicating with LIFX lights")
-            
+
     def get_power(self) -> list:
         try:
             return [device.get_power() for device in self.devices]

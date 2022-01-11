@@ -3,17 +3,21 @@ import datetime
 import operator
 from functools import reduce  # forward compatibility for Python 3
 
+
 def get_by_path(root, items):
     """Access a nested object in root by item sequence."""
     return reduce(operator.getitem, items, root)
+
 
 def set_by_path(root, items, value):
     """Set a value in a nested object in root by item sequence."""
     get_by_path(root, items[:-1])[items[-1]] = value
 
+
 def del_by_path(root, items):
     """Delete a key-value in a nested object in root by item sequence."""
     del get_by_path(root, items[:-1])[items[-1]]
+
 
 def dehumanize(human_str):
     # ensure str
@@ -101,19 +105,20 @@ def parse_hsbk_map(hsbk_map, max_value=65535):
 
     return hsbk
 
+
 def find_paths_to_key(d, target_key):
     def traverse(dic, path=None):
         if not path:
-            path=[]
-        if isinstance(dic,dict):
+            path = []
+        if isinstance(dic, dict):
             for x in dic.keys():
                 local_path = path[:]
                 local_path.append(x)
                 for b in traverse(dic[x], local_path):
                     yield b
-        else: 
-            yield path,dic
-    
+        else:
+            yield path, dic
+
     target_paths = list()
     paths = list(traverse(d))
     for (keys, _) in paths:
@@ -123,7 +128,10 @@ def find_paths_to_key(d, target_key):
 
     return target_paths
 
-def get_config_prop_by_keys(config, keys, default=None, required=True, dehumanized=False):
+
+def get_config_prop_by_keys(
+    config, keys, default=None, required=True, dehumanized=False
+):
     val = default
 
     traversed_config = config
@@ -133,13 +141,14 @@ def get_config_prop_by_keys(config, keys, default=None, required=True, dehumaniz
                 raise KeyError("{} not in config but is required".format(key))
             return default
 
-        traversed_config = traversed_config[key]   
+        traversed_config = traversed_config[key]
 
     val = traversed_config
     if dehumanized:
         val = dehumanize(val)
 
     return val
+
 
 def get_config_prop(config, prop, default=None, required=True, dehumanized=False):
     val = default

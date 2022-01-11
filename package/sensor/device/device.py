@@ -20,39 +20,71 @@ class DeviceSensor(Sensor):
     @property
     def cpu_temperature(self) -> int:
         """Returns the CPU temperature (degrees celsius) as an integer"""
-        pass
+        raise NotImplementedError(
+            "Sub-classes of {} should implement function {}".format(
+                self.__class__.__name__, self.cpu_temperature.__name__
+            )
+        )
 
     @property
     def gpu_temperature(self) -> int:
         """Returns the GPU temperature (degrees celsius) as an integer"""
-        pass
+        raise NotImplementedError(
+            "Sub-classes of {} should implement function {}".format(
+                self.__class__.__name__, self.gpu_temperature.__name__
+            )
+        )
 
     @property
     def cpu_throttle(self) -> bool:
         """Returns a boolean on whether the CPU is thermal throttling"""
-        pass
+        raise NotImplementedError(
+            "Sub-classes of {} should implement function {}".format(
+                self.__class__.__name__, self.cpu_throttle.__name__
+            )
+        )
 
     @property
     def cpu_usage(self) -> int:
         """Returns the CPU usage as an percentage integer"""
-        pass
+        raise NotImplementedError(
+            "Sub-classes of {} should implement function {}".format(
+                self.__class__.__name__, self.cpu_usage.__name__
+            )
+        )
 
     @property
     def memory_usage(self) -> int:
         """Returns the memory usage megabytes as an integer"""
-        pass
+        raise NotImplementedError(
+            "Sub-classes of {} should implement function {}".format(
+                self.__class__.__name__, self.memory_usage.__name__
+            )
+        )
 
     @property
     def memory_total(self) -> int:
         """Returns the total megabytes of memory as an integer"""
-        pass
+        raise NotImplementedError(
+            "Sub-classes of {} should implement function {}".format(
+                self.__class__.__name__, self.memory_total.__name__
+            )
+        )
 
     @property
     def disk_usage(self) -> int:
         """Returns the disk usage megabytes as an integer"""
-        pass
+        raise NotImplementedError(
+            "Sub-classes of {} should implement function {}".format(
+                self.__class__.__name__, self.disk_usage.__name__
+            )
+        )
 
     @property
     def disk_total(self) -> int:
         """Returns the total megabytes of disk as an integer"""
-        pass
+        raise NotImplementedError(
+            "Sub-classes of {} should implement function {}".format(
+                self.__class__.__name__, self.disk_total.__name__
+            )
+        )

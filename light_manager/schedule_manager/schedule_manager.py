@@ -6,9 +6,7 @@ import util.utils as utils
 
 
 class ScheduleManager:
-    def __init__(
-        self, schedules, device_groups, debug=False
-    ):
+    def __init__(self, schedules, device_groups, debug=False):
         self.log = logging.getLogger(self.__class__.__name__)
         self.debug = debug
 

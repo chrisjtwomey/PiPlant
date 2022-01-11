@@ -13,7 +13,11 @@ class TemperatureSensor(Sensor):
     @property
     def temperature(self) -> int:
         """Returns the temperature (degrees celsius) as an integer"""
-        pass
+        raise NotImplementedError(
+            "Sub-classes of {} should implement function {}".format(
+                self.__class__.__name__, self.temperature.__name__
+            )
+        )
 
 
 class BrightnessSensor(Sensor):
@@ -28,7 +32,11 @@ class BrightnessSensor(Sensor):
     @property
     def brightness(self) -> int:
         """Returns the brightness (lux) as an integer"""
-        pass
+        raise NotImplementedError(
+            "Sub-classes of {} should implement function {}".format(
+                self.__class__.__name__, self.brightness.__name__
+            )
+        )
 
 
 class HumiditySensor(Sensor):
@@ -43,7 +51,11 @@ class HumiditySensor(Sensor):
     @property
     def humidity(self) -> int:
         """Returns the humidity as a percentage integer"""
-        pass
+        raise NotImplementedError(
+            "Sub-classes of {} should implement function {}".format(
+                self.__class__.__name__, self.humidity.__name__
+            )
+        )
 
 
 class PressureSensor(Sensor):
@@ -56,7 +68,11 @@ class PressureSensor(Sensor):
     @property
     def pressure(self) -> int:
         """Returns the air pressure (hPa) as an integer"""
-        pass
+        raise NotImplementedError(
+            "Sub-classes of {} should implement function {}".format(
+                self.__class__.__name__, self.pressure.__name__
+            )
+        )
 
 
 class MotionSensor(Sensor):
@@ -69,7 +85,11 @@ class MotionSensor(Sensor):
     @property
     def motion(self) -> bool:
         """Returns a boolean on whether motion was detected"""
-        pass
+        raise NotImplementedError(
+            "Sub-classes of {} should implement function {}".format(
+                self.__class__.__name__, self.motion.__name__
+            )
+        )
 
 
 class EnvironmentAll(

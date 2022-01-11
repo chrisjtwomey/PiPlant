@@ -10,7 +10,9 @@ from package.package import DynamicPackage
 from display.epaper import EPaper
 from sensor.polledsensor import PolledSensor
 from light_manager.schedule_manager.schedule_manager import ScheduleManager
-from light_manager.motion_trigger_manager.motion_trigger_manager import MotionTriggerManager
+from light_manager.motion_trigger_manager.motion_trigger_manager import (
+    MotionTriggerManager,
+)
 
 cwd = os.path.dirname(os.path.realpath(__file__))
 
@@ -161,10 +163,14 @@ class PiPlant(PolledSensor):
         if enabled:
             self.log.info("Initializing lights schedule manager")
             schedules = utils.get_config_prop(sm_config, "schedules", required=True)
-            device_groups_config = utils.get_config_prop(sm_config, "device_groups", required=True)
-            package_refs = utils.get_config_prop(device_groups_config, "package_refs", required=True)
+            device_groups_config = utils.get_config_prop(
+                sm_config, "device_groups", required=True
+            )
+            package_refs = utils.get_config_prop(
+                device_groups_config, "package_refs", required=True
+            )
             device_groups = self.get_package_instances(package_refs)
-            
+
             self.schedule_manager = ScheduleManager(schedules, device_groups)
 
         mtm_config = utils.get_config_prop(lights_config, "motion_trigger_manager")
@@ -173,18 +179,35 @@ class PiPlant(PolledSensor):
 
         if enabled:
             self.log.info("Initializing light motion trigger manager")
-            motion_sensors_config = utils.get_config_prop(mtm_config, "sensors", required=True)
-            package_refs = utils.get_config_prop(motion_sensors_config, "package_refs", required=True)
+            motion_sensors_config = utils.get_config_prop(
+                mtm_config, "sensors", required=True
+            )
+            package_refs = utils.get_config_prop(
+                motion_sensors_config, "package_refs", required=True
+            )
             motion_sensors = self.get_package_instances(package_refs)
 
-            device_groups_config = utils.get_config_prop(mtm_config, "device_groups", required=True)
-            package_refs = utils.get_config_prop(device_groups_config, "package_refs", required=True)
+            device_groups_config = utils.get_config_prop(
+                mtm_config, "device_groups", required=True
+            )
+            package_refs = utils.get_config_prop(
+                device_groups_config, "package_refs", required=True
+            )
             device_groups = self.get_package_instances(package_refs)
 
-            on_motion_trigger_config = utils.get_config_prop(mtm_config, "on_motion_trigger", required=True)
-            on_motion_timeout_config = utils.get_config_prop(mtm_config, "on_motion_timeout", required=True)
+            on_motion_trigger_config = utils.get_config_prop(
+                mtm_config, "on_motion_trigger", required=True
+            )
+            on_motion_timeout_config = utils.get_config_prop(
+                mtm_config, "on_motion_timeout", required=True
+            )
 
-            self.motion_trigger_manager = MotionTriggerManager(motion_sensors, on_motion_trigger_config, on_motion_timeout_config, device_groups)
+            self.motion_trigger_manager = MotionTriggerManager(
+                motion_sensors,
+                on_motion_trigger_config,
+                on_motion_timeout_config,
+                device_groups,
+            )
 
         self.log.info("Packages initialized")
 
@@ -295,14 +318,14 @@ class PiPlant(PolledSensor):
             kwargs = utils.get_config_prop(package, "kwargs", required=False)
 
             if kwargs is not None:
-                paths = utils.find_paths_to_key(kwargs, "package_refs") 
+                paths = utils.find_paths_to_key(kwargs, "package_refs")
                 for keys in paths:
                     package_refs = utils.get_by_path(kwargs, keys)
                     insts = [instances[name] for name in package_refs]
                     utils.del_by_path(kwargs, keys)
                     utils.set_by_path(kwargs, keys[:-1], insts)
 
-                paths = utils.find_paths_to_key(kwargs, "package_ref") 
+                paths = utils.find_paths_to_key(kwargs, "package_ref")
                 for keys in paths:
                     package_ref = utils.get_by_path(kwargs, keys)
                     inst = instances[package_ref]

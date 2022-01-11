@@ -16,7 +16,11 @@ class Hygrometer(Sensor):
     @property
     def percentage(self) -> int:
         """Returns the soil moisture as a percentage of 100"""
-        pass
+        raise NotImplementedError(
+            "Sub-classes of {} should implement function {}".format(
+                self.__class__.__name__, self.percentage.__name__
+            )
+        )
 
     @property
     def is_dry(self) -> bool:

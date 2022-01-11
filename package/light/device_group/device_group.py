@@ -3,6 +3,7 @@ import util.utils as utils
 
 import logging
 
+
 class DeviceGroup:
     def __init__(self, name, devices, query_interval="2m"):
         self._group_name = name
@@ -16,20 +17,40 @@ class DeviceGroup:
         self.log = logging.getLogger("{}.{}".format(self.__class__.__name__, self.name))
 
     def get_devices(self) -> list:
-        raise NotImplementedError("Sub-classes of {} should implement function {}".format(self.__class__.__name__, self.get_devices.__name__))
+        raise NotImplementedError(
+            "Sub-classes of {} should implement function {}".format(
+                self.__class__.__name__, self.get_devices.__name__
+            )
+        )
 
     def get_power(self) -> list:
-        raise NotImplementedError("Sub-classes of {} should implement function {}".format(self.__class__.__name__, self.get_power.__name__))
+        raise NotImplementedError(
+            "Sub-classes of {} should implement function {}".format(
+                self.__class__.__name__, self.get_power.__name__
+            )
+        )
 
     def set_power(self, power, transition_seconds=0) -> None:
-        raise NotImplementedError("Sub-classes of {} should implement function {}".format(self.__class__.__name__, self.set_power.__name__))
+        raise NotImplementedError(
+            "Sub-classes of {} should implement function {}".format(
+                self.__class__.__name__, self.set_power.__name__
+            )
+        )
 
     def get_hsbk(self) -> list:
-        raise NotImplementedError("Sub-classes of {} should implement function {}".format(self.__class__.__name__, self.get_hsbk.__name__))
+        raise NotImplementedError(
+            "Sub-classes of {} should implement function {}".format(
+                self.__class__.__name__, self.get_hsbk.__name__
+            )
+        )
 
     def set_hsbk(self, hsbk, transition_seconds=0) -> None:
-        raise NotImplementedError("Sub-classes of {} should implement function {}".format(self.__class__.__name__, self.set_hsbk.__name__))
-    
+        raise NotImplementedError(
+            "Sub-classes of {} should implement function {}".format(
+                self.__class__.__name__, self.set_hsbk.__name__
+            )
+        )
+
     @property
     def name(self) -> str:
         return self._group_name
@@ -44,14 +65,14 @@ class DeviceGroup:
             self.refresh()
 
         powers = self._power
-        
+
         return powers
 
     @property
     def hsbk(self) -> list:
         if self.check_refresh:
             self.refresh()
-        
+
         return self._hsbk
 
     @property

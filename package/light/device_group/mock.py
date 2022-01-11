@@ -5,7 +5,7 @@ class MockDeviceGroup(DeviceGroup):
     def __init__(self, **kwargs):
         name = kwargs["name"]
         devices = kwargs["devices"]
-        
+
         super().__init__(name, devices)
 
     def get_devices(self) -> list:
