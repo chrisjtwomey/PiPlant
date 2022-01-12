@@ -87,4 +87,8 @@ class DeviceGroup:
         self._hsbk = self.get_hsbk()
         self._query_time = time.time()
 
-        self.log.debug("refreshed device states:\n\tpower: {}\n\thsbk: {}".format(self._power, self._hsbk))
+        self.log.debug(
+            "refreshed device states:\n\tpower: {}\n\thsbk: {}".format(
+                self._power, self._hsbk
+            )
+        )

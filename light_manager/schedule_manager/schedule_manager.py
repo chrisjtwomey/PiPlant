@@ -45,9 +45,14 @@ class ScheduleManager:
             transition_seconds = 0
 
         if self._active_schedule != current_schedule:
-            self.log.info(
-                "Light schedule changed - {}".format(current_schedule["name"])
+            transition_msg = (
+                "Light schedule changed: {} -> {}".format(
+                    self._active_schedule["name"], current_schedule["name"]
+                )
+                if self._active_schedule is not None
+                else "New light schedule: {}".format(current_schedule["name"])
             )
+            self.log.info(transition_msg)
 
             for group in self._devicegroups:
                 group.set_hsbk(hsbk, transition_seconds)

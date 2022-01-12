@@ -64,7 +64,7 @@ This project is designed to not require specific hardware to run. See [Adding or
 
 4. Run the built docker image:
     ```
-    sudo docker run -d --name piplant --privileged piplant:latest -- --config config/piplant.yaml
+    sudo docker run -d --name piplant --privileged --volume $(pwd)/config:/config piplant:latest --config /config/piplant.yaml
     ```
     The container needs the `--privileged` flag to access the GPIO pins.
 

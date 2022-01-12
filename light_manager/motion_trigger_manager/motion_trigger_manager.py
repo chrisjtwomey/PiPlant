@@ -48,23 +48,25 @@ class MotionTriggerManager:
 
     def on_motion_trigger(self, hsbk, transition_seconds=0):
         if self._current_hsbk != hsbk:
+            self.log.info("motion triggered - activating light groups")
             self.log.debug(
-                    "on_motion_trigger:\n\tHSBK: {}\n\ttransition_seconds: {}".format(
-                        self._on_motion_trigger_hsbk,
-                        self._on_motion_timeout_transition,
-                    )
+                "\tHSBK: {}\n\ttransition_seconds: {}".format(
+                    self._on_motion_trigger_hsbk,
+                    self._on_motion_timeout_transition,
                 )
+            )
             self.on_motion(hsbk, transition_seconds=transition_seconds)
             self._current_hsbk = hsbk
 
     def on_motion_timeout(self, hsbk, transition_seconds=0):
         if self._current_hsbk != hsbk:
+            self.log.info("motion timeout - deactivating light groups")
             self.log.debug(
-                    "on_motion_timeout:\n\tHSBK: {}\n\ttransition_seconds: {}".format(
-                        self._on_motion_trigger_hsbk,
-                        self._on_motion_timeout_transition,
-                    )
+                "\tHSBK: {}\n\ttransition_seconds: {}".format(
+                    self._on_motion_trigger_hsbk,
+                    self._on_motion_timeout_transition,
                 )
+            )
             self.on_motion(hsbk, transition_seconds=transition_seconds)
             self._current_hsbk = hsbk
 

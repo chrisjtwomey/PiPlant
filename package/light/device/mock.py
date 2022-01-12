@@ -6,9 +6,9 @@ class MockLight(Device):
         self._power = False
         self._hsbk = [0, 0, 0, 0]
 
-        ip = kwargs["ip"]
+        ip_addr = kwargs["ip_addr"]
 
-        super().__init__(ip)
+        super().__init__(ip_addr)
 
     def get_power(self):
         return self._power

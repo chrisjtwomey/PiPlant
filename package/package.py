@@ -43,11 +43,10 @@ class DynamicPackage:
             pkg = path + ".mock."
             try:
                 class_ = import_pkg(pkg)
-            except ImportError as ie:
-                log.warning(
-                    "Error importing custom mock class. Retrying with stock mock class..."
-                )
-                log.exception(ie)
+            except (ImportError, ModuleNotFoundError) as e:
+                log.warning(e)
+                log.debug(e, exc_info=1)
+                log.warning("Trying stock mock class...")
 
                 path_segs = path.split(".")
                 # TODO: this could be better

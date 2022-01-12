@@ -134,8 +134,6 @@ packages:
     package: 
       remote_module: rpi_epd3in7.epd
       module: display.driver
-      kwargs:
-        mock: true
   - name: lifx-desk-trio-left
     package:
       remote_module: lifxlan.light

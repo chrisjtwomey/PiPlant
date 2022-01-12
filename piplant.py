@@ -41,7 +41,7 @@ class PiPlant(PolledSensor):
         self.debug = debug
         self.mock = mock
 
-        self.config_path = os.path.join(cwd, "config")
+        self.config_path = os.path.join(cwd, "template")
 
         logging_cfg_path = os.path.join(self.config_path, "logging.ini")
         if self.debug:
@@ -208,7 +208,7 @@ class PiPlant(PolledSensor):
                 on_motion_trigger_config,
                 on_motion_timeout_config,
                 device_groups,
-                timeout=timeout
+                timeout=timeout,
             )
 
         self.log.info("Packages initialized")
@@ -241,7 +241,7 @@ class PiPlant(PolledSensor):
         )
 
     def get_value(self):
-        self.log.info("Fetching...")
+        self.log.debug("Fetching...")
 
         hygrometer_data = []
         for sensor in self.hygrometers:
@@ -270,7 +270,7 @@ class PiPlant(PolledSensor):
         return data_payload
 
     def process(self, data):
-        self.log.info("Processing...")
+        self.log.debug("Processing...")
 
         _ = self._value
 
@@ -292,7 +292,7 @@ class PiPlant(PolledSensor):
         now = time.time()
         seconds_since_render = math.ceil(now - self._render_time)
         if seconds_since_render >= self._render_interval_seconds:
-            self.log.info("Rendering...")
+            self.log.debug("Rendering...")
             data = self._value
 
             if self._display_enabled:

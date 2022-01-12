@@ -1,6 +1,6 @@
 class Device:
-    def __init__(self, ip):
-        self._ip = ip
+    def __init__(self, ip_addr):
+        self._ip = ip_addr
 
     def get_power(self) -> bool:
         raise NotImplementedError(
