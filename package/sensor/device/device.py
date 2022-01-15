@@ -7,6 +7,7 @@ class DeviceSensor(Sensor):
 
     def get_data(self) -> dict:
         return {
+            "name": self.name,
             "cpu_temperature": self.cpu_temperature,
             "gpu_temperature": self.gpu_temperature,
             "cpu_throttle": self.cpu_throttle,
@@ -22,7 +23,7 @@ class DeviceSensor(Sensor):
         """Returns the CPU temperature (degrees celsius) as an integer"""
         raise NotImplementedError(
             "Sub-classes of {} should implement function {}".format(
-                self.__class__.__name__, self.cpu_temperature.__name__
+                self.__class__.__name__, "cpu_temperature"
             )
         )
 
@@ -31,7 +32,7 @@ class DeviceSensor(Sensor):
         """Returns the GPU temperature (degrees celsius) as an integer"""
         raise NotImplementedError(
             "Sub-classes of {} should implement function {}".format(
-                self.__class__.__name__, self.gpu_temperature.__name__
+                self.__class__.__name__, "gpu_temperature"
             )
         )
 
@@ -40,7 +41,7 @@ class DeviceSensor(Sensor):
         """Returns a boolean on whether the CPU is thermal throttling"""
         raise NotImplementedError(
             "Sub-classes of {} should implement function {}".format(
-                self.__class__.__name__, self.cpu_throttle.__name__
+                self.__class__.__name__, "cpu_throttle"
             )
         )
 
@@ -49,7 +50,7 @@ class DeviceSensor(Sensor):
         """Returns the CPU usage as an percentage integer"""
         raise NotImplementedError(
             "Sub-classes of {} should implement function {}".format(
-                self.__class__.__name__, self.cpu_usage.__name__
+                self.__class__.__name__, "cpu_usage"
             )
         )
 
@@ -58,7 +59,7 @@ class DeviceSensor(Sensor):
         """Returns the memory usage megabytes as an integer"""
         raise NotImplementedError(
             "Sub-classes of {} should implement function {}".format(
-                self.__class__.__name__, self.memory_usage.__name__
+                self.__class__.__name__, "memory_usage"
             )
         )
 
@@ -67,7 +68,7 @@ class DeviceSensor(Sensor):
         """Returns the total megabytes of memory as an integer"""
         raise NotImplementedError(
             "Sub-classes of {} should implement function {}".format(
-                self.__class__.__name__, self.memory_total.__name__
+                self.__class__.__name__, "memory_total"
             )
         )
 
@@ -76,7 +77,7 @@ class DeviceSensor(Sensor):
         """Returns the disk usage megabytes as an integer"""
         raise NotImplementedError(
             "Sub-classes of {} should implement function {}".format(
-                self.__class__.__name__, self.disk_usage.__name__
+                self.__class__.__name__, "disk_usage"
             )
         )
 
@@ -85,6 +86,6 @@ class DeviceSensor(Sensor):
         """Returns the total megabytes of disk as an integer"""
         raise NotImplementedError(
             "Sub-classes of {} should implement function {}".format(
-                self.__class__.__name__, self.disk_total.__name__
+                self.__class__.__name__, "disk_total"
             )
         )

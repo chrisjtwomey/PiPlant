@@ -1,5 +1,8 @@
 ---
 piplant:
+  database:
+    driver:
+      package_ref: sqlite-driver
   display:
     enabled: true
     driver:
@@ -39,7 +42,7 @@ piplant:
           - sensorhub
   lights:
     schedule_manager:
-      enabled: true
+      enabled: false
       device_query_interval: 2m
       device_groups:
         package_refs:
@@ -81,7 +84,7 @@ piplant:
             brightness: 0%
             kelvin: 2000
     motion_trigger_manager:
-      enabled: true
+      enabled: false
       timeout: 15m
       sensors:
         package_refs:
@@ -100,6 +103,11 @@ piplant:
           brightness: 0%
           kelvin: 3000
 packages:
+  - name: sqlite-driver
+    package:
+      module: db.driver.sqlite3.driver
+      kwargs:
+        dbdata_path: piplant.db
   - name: hygrometer-adc-1
     package: 
       module: sensor.hygrometer.aideepen.capacitivehygrometer
@@ -133,46 +141,46 @@ packages:
   - name: epd
     package: 
       remote_module: rpi_epd3in7.epd
-      module: display.driver
+      module: display.driver.epd.mock
   - name: lifx-desk-trio-left
     package:
       remote_module: lifxlan.light
-      module: light.device
+      module: light.device.lifx.mock
       kwargs:
         mac_addr: d0:73:d5:6d:59:2d
         ip_addr: 192.168.1.29 
   - name: lifx-desk-trio-middle
     package:
       remote_module: lifxlan.light
-      module: light.device
+      module: light.device.lifx.mock
       kwargs:
         mac_addr: d0:73:d5:6b:cc:29
         ip_addr: 192.168.1.28
   - name: lifx-desk-trio-right
     package:
       remote_module: lifxlan.light
-      module: light.device
+      module: light.device.lifx.mock
       kwargs:
         mac_addr: d0:73:d5:6a:12:7a
         ip_addr: 192.168.1.30
   - name: lifx-monitor-lamp
     package:
       remote_module: lifxlan.light
-      module: light.device
+      module: light.device.lifx.mock
       kwargs:
         mac_addr: d0:73:d5:6b:61:51
         ip_addr: 192.168.1.39
   - name: lifx-office-corner-lamp
     package:
       remote_module: lifxlan.light
-      module: light.device
+      module: light.device.lifx.mock
       kwargs:
         mac_addr: d0:73:d5:6d:8f:b1
         ip_addr: 192.168.1.27
   - name: lifx-desk-strip
     package:
       remote_module: lifxlan.light
-      module: light.device
+      module: light.device.lifx.mock
       kwargs:
         mac_addr: d0:73:d5:43:c8:eb
         ip_addr: 192.168.1.40 

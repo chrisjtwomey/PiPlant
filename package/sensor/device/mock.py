@@ -15,7 +15,7 @@ class MockDeviceStatistics(DeviceSensor):
         return random.choice([False, True])
 
     @property
-    def cpu_usage_perc(self):
+    def cpu_usage(self):
         return random.randrange(0, 100)
 
     @property
@@ -23,19 +23,19 @@ class MockDeviceStatistics(DeviceSensor):
         return random.randrange(0, 100)
 
     @property
-    def memory_usage_perc(self):
-        return random.randrange(0, 100)
+    def memory_usage(self):
+        return random.randrange(0, self.memory_total)
 
     @property
-    def memory_total_mb(self):
+    def memory_total(self):
         return 8192
 
     @property
-    def disk_usage_perc(self):
-        return random.randrange(0, 100)
+    def disk_usage(self):
+        return random.randrange(0, self.disk_total)
 
     @property
-    def disk_total_mb(self):
+    def disk_total(self):
         return 1024
 
     @property

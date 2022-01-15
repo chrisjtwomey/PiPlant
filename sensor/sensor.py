@@ -1,13 +1,14 @@
+import time
 import logging
 
 
 class Sensor:
     def __init__(self):
-        if not hasattr(self, "sensor_id") or self.sensor_id == None:
-            self.sensor_id = self.__class__.__name__
+        if not hasattr(self, "name") or self.name == None:
+            self.name = self.__class__.__name__
 
         self._data = dict()
-        self.log = logging.getLogger(self.sensor_id)
+        self.log = logging.getLogger(str(self.name))
 
     def get_data(self) -> dict:
         pass
@@ -16,7 +17,8 @@ class Sensor:
     def data(self):
         try:
             data = self.get_data()
-            # data["time"] = time.time()
+            data["name"] = self.name
+            data["time"] = int(time.time())
 
             self._data = data
         except Exception as e:

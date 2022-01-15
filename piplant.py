@@ -5,6 +5,7 @@ import math
 import time
 import argparse
 import logging.config
+from db.db import DataPayload, Database
 import util.utils as utils
 from package.package import DynamicPackage
 from display.epaper import EPaper
@@ -58,12 +59,14 @@ class PiPlant(PolledSensor):
         packages_config = utils.get_config_prop(config, "packages")
 
         ppconfig = config["piplant"]
+        database_config = utils.get_config_prop(ppconfig, "database", required=True)
         display_config = utils.get_config_prop(ppconfig, "display", required=False)
         hygrometers_config = utils.get_config_prop(ppconfig, "hygrometers")
         environment_config = utils.get_config_prop(ppconfig, "environment")
         device_config = utils.get_config_prop(ppconfig, "device")
         lights_config = utils.get_config_prop(ppconfig, "lights", required=False)
 
+        self.database = None
         self.schedule_manager = None
         self.motion_trigger_manager = None
 
@@ -74,9 +77,8 @@ class PiPlant(PolledSensor):
             display_config, "refresh_interval", default="1hr", dehumanized=True
         )
 
-        self.log.info(
-            r"""\
-            
+        print(
+            r"""
                             PiPlant
                          @chrisjtwomey
                     _
@@ -108,6 +110,18 @@ class PiPlant(PolledSensor):
             sys.exit(1)
         except Exception as e:
             raise e
+
+        ######################################################################
+        # database
+        ######################################################################
+
+        self.log.info("Initializing database")
+        driver_config = utils.get_config_prop(database_config, "driver")
+        packageref = utils.get_config_prop(driver_config, "package_ref")
+        db_driver = self.get_package_instance(packageref)
+
+        self.database = Database(db_driver)
+        self.log.info("Database initialized")
 
         ######################################################################
         # sensor packages
@@ -256,23 +270,14 @@ class PiPlant(PolledSensor):
 
         device_data = []
         for sensor in self.device_sensors:
-            sensordata = []
-            for sensor in sensors:
-                sensordata.append(sensor.data)
-            device_data.append(sensordata)
+            device_data.append(sensor.data)
 
-        data_payload = {
-            "hygrometer": hygrometer_data,
-            "environment": environment_data,
-            "device": device_data,
-        }
+        payload = DataPayload(hygrometer_data, environment_data, device_data)
 
-        return data_payload
+        return payload
 
     def process(self, data):
         self.log.debug("Processing...")
-
-        _ = self._value
 
         if self.schedule_manager is not None:
             self.schedule_manager.process()
@@ -280,11 +285,9 @@ class PiPlant(PolledSensor):
         if self.motion_trigger_manager is not None:
             self.motion_trigger_manager.process()
 
-        self._process_time = time.time()
+        self.database.handle_data_payload(data)
 
-        # save to db
-        # print(data)
-        return None
+        self._process_time = time.time()
 
     def render(
         self,

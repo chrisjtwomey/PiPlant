@@ -8,7 +8,7 @@ class CapacitiveHygrometer(Hygrometer):
     def __init__(
         self, adc_channel=0, min_value=0.25, max_value=0.8, dry_value_percentage=0.50
     ):
-        self.sensor_id = "Hygrometer #{}".format(adc_channel)
+        self.name = "Hygrometer #" + str(adc_channel)
         self._adc_channel = adc_channel
         self._min_value = min_value
         self._max_value = max_value
