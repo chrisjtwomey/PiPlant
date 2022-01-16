@@ -1,5 +1,5 @@
 from lifxlan import Group, WorkflowException
-from ..device_group import DeviceGroup
+from ..device_group import DeviceGroup, DeviceGroupError
 
 
 class LifxDeviceGroup(DeviceGroup):
@@ -17,6 +17,7 @@ class LifxDeviceGroup(DeviceGroup):
                 self.refresh()
             except WorkflowException as e:
                 self.log.error("Error occurred communicating with LIFX lights")
+                raise DeviceGroupError("Error occurred communicating with LIFX lights")
 
     def get_power(self) -> list:
         try:
@@ -38,6 +39,7 @@ class LifxDeviceGroup(DeviceGroup):
                 self.refresh()
             except WorkflowException as e:
                 self.log.error("Error occurred communicating with LIFX lights")
+                raise DeviceGroupError("Error occurred communicating with LIFX lights")
 
     def get_hsbk(self) -> list:
         try:

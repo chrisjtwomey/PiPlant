@@ -1,6 +1,7 @@
 import logging
 import datetime
 import util.utils as utils
+from package.light.device_group.device_group import DeviceGroupError
 
 
 class ScheduleManager:
@@ -52,10 +53,13 @@ class ScheduleManager:
             )
             self.log.info(transition_msg)
 
-            for group in self._devicegroups:
-                group.set_hsbk(hsbk, transition_seconds)
+            try:
+                for group in self._devicegroups:
+                    group.set_hsbk(hsbk, transition_seconds)
 
-            self._active_schedule = current_schedule
+                self._active_schedule = current_schedule
+            except DeviceGroupError as e:
+                self.log.error(e)
 
     def get_current_schedule(self):
         if len(self._schedules) == 0:

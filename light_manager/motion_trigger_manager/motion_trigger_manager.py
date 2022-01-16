@@ -2,6 +2,7 @@ import math
 import time
 import logging
 import util.utils as utils
+from package.light.device_group.device_group import DeviceGroupError
 
 
 class MotionTriggerManager:
@@ -67,8 +68,11 @@ class MotionTriggerManager:
                     self._on_motion_timeout_transition,
                 )
             )
-            self.on_motion(hsbk, transition_seconds=transition_seconds)
-            self._current_hsbk = hsbk
+            try:
+                self.on_motion(hsbk, transition_seconds=transition_seconds)
+                self._current_hsbk = hsbk
+            except DeviceGroupError as e:
+                self.log.error(e)
 
     def process(self):
         motion_detection = any([sensor.motion for sensor in self.motion_sensors])

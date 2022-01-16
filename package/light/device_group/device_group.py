@@ -4,6 +4,11 @@ import util.utils as utils
 import logging
 
 
+class DeviceGroupError(Exception):
+    def __init__(self, message):
+        super().__init__(message)
+
+
 class DeviceGroup:
     def __init__(self, name, devices, query_interval="2m"):
         self._group_name = name
