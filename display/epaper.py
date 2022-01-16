@@ -50,7 +50,7 @@ class EPaper:
 
         # center text in display
         sizeW, sizeH = self.util.logo_size_large
-        x = self.width / 2 - sizeW / 2
+        x = self.width / 2
         y = self.height / 2 + sizeH / 2
         self.util.draw_image("logo.png", x, y, (sizeW, sizeH))
 
