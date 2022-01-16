@@ -6,9 +6,11 @@ class CapacitiveHygrometer(Hygrometer):
     ADC_MAX_VOLTAGE = 3.3
 
     def __init__(
-        self, adc_channel=0, min_value=0.25, max_value=0.8, dry_value_percentage=0.50
+        self, name = None, adc_channel=0, min_value=0.25, max_value=0.8, dry_value_percentage=0.50
     ):
-        self.name = "Hygrometer #" + str(adc_channel)
+        if name is None:
+            self.name = "Hygrometer #" + str(adc_channel)
+            
         self._adc_channel = adc_channel
         self._min_value = min_value
         self._max_value = max_value

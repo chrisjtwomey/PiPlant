@@ -117,6 +117,7 @@ packages:
     package: 
       module: sensor.hygrometer.aideepen.capacitivehygrometer
       kwargs:
+        name: "Fukien Tea"
         adc_channel: 1
         min_value: 0.30
         max_value: 0.70
@@ -125,6 +126,7 @@ packages:
     package: 
       module: sensor.hygrometer.aideepen.capacitivehygrometer
       kwargs:
+        name: "China Doll"
         adc_channel: 2
         min_value: 0.30
         max_value: 0.68
@@ -133,6 +135,7 @@ packages:
     package: 
       module: sensor.hygrometer.aideepen.capacitivehygrometer
       kwargs:
+        name: "Emerald Palm"
         adc_channel: 3
         min_value: 0.30
         max_value: 0.67

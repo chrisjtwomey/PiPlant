@@ -161,9 +161,9 @@ class EPaper:
                 self.util.draw_image(icon, wiX, wiY, self.util.icon_size_tiny)
 
             # draw sensor id
-            sensor_id = "#" + str(id)
+            sensor_id = id
             tW, tH = font.getsize(sensor_id)
-            tX, tY = cX - r, cY + r
+            tX, tY = cX, cY + r * 1.5
             self.util.draw_text(font, sensor_id, tX, tY)
 
             if draw_value_text:
@@ -204,7 +204,6 @@ class EPaper:
         col_width = 140
         row_height = 120
         num_sensors = len(data)
-        sensor_ids = range(0, num_sensors)
 
         x = self.width / 2 - col_width
         y = self.height * 0.5
@@ -216,9 +215,10 @@ class EPaper:
             x, y, col_width, row_height, num_sensors, max_cols_per_row
         )
 
-        for id in sensor_ids:
+        for id in range(0, num_sensors):
             sensor_data = data[id]
-            draw_sensor_data(id, sensor_data, coords[id])
+            sensor_name = sensor_data["name"]
+            draw_sensor_data(sensor_name, sensor_data, coords[id])
 
     def draw_environment_data(self, data):
         def draw_sensor_data(icon, data_key, sensor_unit_txt, x, y):
