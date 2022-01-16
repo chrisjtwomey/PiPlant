@@ -1,8 +1,8 @@
 import sys
 import os
 import yaml
-import math
 import time
+import datetime
 import argparse
 import logging.config
 from db.db import DataPayload, Database
@@ -73,9 +73,10 @@ class PiPlant(PolledSensor):
         self._display_enabled = utils.get_config_prop(
             display_config, "enabled", default="false", required=False, dehumanized=True
         )
-        self._render_interval_seconds = utils.get_config_prop(
-            display_config, "refresh_interval", default="1hr", dehumanized=True
+        self._render_schedules = utils.get_config_prop(
+            display_config, "refresh_schedule", default=["12:00", "18:00"]
         )
+        self._current_render_hour = None
 
         print(
             r"""
@@ -292,9 +293,15 @@ class PiPlant(PolledSensor):
     def render(
         self,
     ):
-        now = time.time()
-        seconds_since_render = math.ceil(now - self._render_time)
-        if seconds_since_render >= self._render_interval_seconds:
+        nowdate = datetime.datetime.now()
+        latest_render_hour = None
+        for render_hour in self._render_schedules:
+            render_hour_dt = utils.hour_to_datetime(render_hour)
+
+            if nowdate >= render_hour_dt:
+                latest_render_hour = render_hour_dt
+
+        if self._current_render_hour != latest_render_hour:
             self.log.debug("Rendering...")
             data = self._value
 
@@ -303,6 +310,7 @@ class PiPlant(PolledSensor):
                 self.display.sleep()
 
             self._render_time = time.time()
+            self._current_render_hour = latest_render_hour
 
     def poll_pause(self):
         seconds = self._poll_interval_seconds

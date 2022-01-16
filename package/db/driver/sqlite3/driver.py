@@ -1,4 +1,3 @@
-from package.db.driver.driver import DatabaseDriver
 import sqlite3
 from ..driver import DatabaseDriver
 

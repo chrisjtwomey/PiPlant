@@ -366,10 +366,10 @@ class EPaper:
 
         self.util.draw_linechart(testdata, x, y, w, h)
 
-    def draw_data(self, data):
-        hygrometer_data = data["hygrometer"]
-        enviroment_data = data["environment"]
-        device_data = data["device"]
+    def draw_data(self, data_payload):
+        hygrometer_data = data_payload.hygrometers
+        enviroment_data = data_payload.environment
+        device_data = data_payload.device
 
         step = self.STEP_HYGROMETER
         # step = self.STEP_ENVIRONMENT

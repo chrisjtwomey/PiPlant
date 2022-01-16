@@ -7,7 +7,12 @@ piplant:
     enabled: true
     driver:
       package_ref: epd
-    refresh_interval: 1hr
+    refresh_schedule:
+      - "09:00"
+      - "12:00"
+      - "15:00"
+      - "18:00"
+      - "21:00"
     skip_splash_screen: false
   hygrometers:
     sensors:

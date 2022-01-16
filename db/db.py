@@ -117,7 +117,7 @@ class Database:
         self.driver.insert(
             self.TABLE_NAME_HYGROMETERS,
             [
-                "\"{}\"".format(sensor["name"]),
+                '"{}"'.format(sensor["name"]),
                 sensor["percentage"],
                 sensor["dry_value_percentage"],
                 sensor["is_dry"],
@@ -129,7 +129,7 @@ class Database:
         self.driver.insert(
             self.TABLE_NAME_ENVIRONMENT,
             [
-                "\"{}\"".format(sensor["name"]),
+                '"{}"'.format(sensor["name"]),
                 sensor["temperature"] if "temperature" in sensor else None,
                 sensor["humidity"] if "humidity" in sensor else None,
                 sensor["pressure"] if "pressure" in sensor else None,
@@ -143,7 +143,7 @@ class Database:
         self.driver.insert(
             self.TABLE_NAME_DEVICE,
             [
-                "\"{}\"".format(sensor["name"]),
+                '"{}"'.format(sensor["name"]),
                 sensor["cpu_temperature"] if "cpu_temperature" in sensor else None,
                 sensor["gpu_temperature"] if "gpu_temperature" in sensor else None,
                 sensor["cpu_throttle"] if "cpu_throttle" in sensor else None,
