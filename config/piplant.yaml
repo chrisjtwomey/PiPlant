@@ -47,7 +47,7 @@ piplant:
           - sensorhub
   lights:
     schedule_manager:
-      enabled: false
+      enabled: true
       device_query_interval: 2m
       device_groups:
         package_refs:
@@ -89,7 +89,7 @@ piplant:
             brightness: 0%
             kelvin: 2000
     motion_trigger_manager:
-      enabled: false
+      enabled: true
       timeout: 15m
       sensors:
         package_refs:
