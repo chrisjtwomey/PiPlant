@@ -51,7 +51,7 @@ class MotionTriggerManager:
         if self._current_hsbk != hsbk:
             self.log.info("motion triggered - activating light groups")
             self.log.debug(
-                "\tHSBK: {}\n\ttransition_seconds: {}".format(
+                "HSBK: {}, transition_seconds: {}".format(
                     self._on_motion_trigger_hsbk,
                     self._on_motion_timeout_transition,
                 )
@@ -63,7 +63,7 @@ class MotionTriggerManager:
         if self._current_hsbk != hsbk:
             self.log.info("motion timeout - deactivating light groups")
             self.log.debug(
-                "\tHSBK: {}\n\ttransition_seconds: {}".format(
+                "HSBK: {}, transition_seconds: {}".format(
                     self._on_motion_trigger_hsbk,
                     self._on_motion_timeout_transition,
                 )

@@ -6,7 +6,10 @@ from functools import reduce  # forward compatibility for Python 3
 
 def get_by_path(root, items):
     """Access a nested object in root by item sequence."""
-    return reduce(operator.getitem, items, root)
+    val = reduce(operator.getitem, items, root)
+    if isinstance(val, str):
+        val = [val]
+    return val
 
 
 def set_by_path(root, items, value):
@@ -106,7 +109,7 @@ def parse_hsbk_map(hsbk_map, max_value=65535):
     return hsbk
 
 
-def find_paths_to_key(d, target_key):
+def find_paths_to_key(d, *target_keys):
     def traverse(dic, path=None):
         if not path:
             path = []
@@ -122,9 +125,8 @@ def find_paths_to_key(d, target_key):
     target_paths = list()
     paths = list(traverse(d))
     for (keys, _) in paths:
-        if target_key in keys:
+        if any(target_key in keys for target_key in target_keys):
             target_paths.append(keys)
-            break
 
     return target_paths
 

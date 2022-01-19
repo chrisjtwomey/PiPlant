@@ -5,10 +5,10 @@ import time
 import datetime
 import argparse
 import logging.config
-from db.db import DataPayload, Database
 import util.utils as utils
-from package.package import DynamicPackage
 from display.epaper import EPaper
+from db.db import DataPayload, Database
+from package.package import PackageImporter
 from sensor.polledsensor import PolledSensor
 from light_manager.schedule_manager.schedule_manager import ScheduleManager
 from light_manager.motion_trigger_manager.motion_trigger_manager import (
@@ -56,28 +56,6 @@ class PiPlant(PolledSensor):
 
         super().__init__(self._poll_interval_seconds)
 
-        packages_config = utils.get_config_prop(config, "packages")
-
-        ppconfig = config["piplant"]
-        database_config = utils.get_config_prop(ppconfig, "database", required=True)
-        display_config = utils.get_config_prop(ppconfig, "display", required=False)
-        hygrometers_config = utils.get_config_prop(ppconfig, "hygrometers")
-        environment_config = utils.get_config_prop(ppconfig, "environment")
-        device_config = utils.get_config_prop(ppconfig, "device")
-        lights_config = utils.get_config_prop(ppconfig, "lights", required=False)
-
-        self.database = None
-        self.schedule_manager = None
-        self.motion_trigger_manager = None
-
-        self._display_enabled = utils.get_config_prop(
-            display_config, "enabled", default="false", required=False, dehumanized=True
-        )
-        self._render_schedules = utils.get_config_prop(
-            display_config, "refresh_schedule", default=["12:00", "18:00"]
-        )
-        self._current_render_hour = None
-
         print(
             r"""
                             PiPlant
@@ -100,36 +78,56 @@ class PiPlant(PolledSensor):
         if self.mock:
             self.log.info("In global mock mode")
 
-        self.log.info("Initializing packages...")
-        self._package_instances = dict()
+        ######################################################################
+        # dynamically import packages
+        ######################################################################
+
+        packages_config = utils.get_config_prop(config, "packages")
+        self.log.info("Importing packages...")
+        self.importer = PackageImporter(packages_config)
         try:
-            self._package_instances = self._get_package_instances_from_config(
-                packages_config, self.mock
-            )
+            self.importer.import_packages(mock=self.mock)
         except ModuleNotFoundError as mnfe:
             self.log.error(mnfe)
             sys.exit(1)
         except Exception as e:
             raise e
 
+        ppconfig = self.importer.config_embed_packages(config["piplant"])
+        database_config = utils.get_config_prop(ppconfig, "database", required=True)
+        display_config = utils.get_config_prop(ppconfig, "display", required=False)
+        hygrometers_config = utils.get_config_prop(ppconfig, "hygrometers")
+        environment_config = utils.get_config_prop(ppconfig, "environment")
+        device_config = utils.get_config_prop(ppconfig, "device")
+        lights_config = utils.get_config_prop(ppconfig, "lights", required=False)
+
+        self.database = None
+        self.importer = None
+        self.schedule_manager = None
+        self.motion_trigger_manager = None
+
+        self._display_enabled = utils.get_config_prop(
+            display_config, "enabled", default="false", required=False, dehumanized=True
+        )
+        self._render_schedules = utils.get_config_prop(
+            display_config, "refresh_schedule", default=["12:00", "18:00"]
+        )
+        self._current_render_hour = None
+
         ######################################################################
         # database
         ######################################################################
 
-        self.log.info("Initializing database")
-        driver_config = utils.get_config_prop(database_config, "driver")
-        packageref = utils.get_config_prop(driver_config, "package_ref")
-        db_driver = self.get_package_instance(packageref)
-
+        db_driver = utils.get_config_prop(database_config, "driver")
         self.database = Database(db_driver)
-        self.log.info("Database initialized")
 
         ######################################################################
-        # sensor packages
+        # sensors
         ######################################################################
 
-        self.log.info("Initializing sensors")
-        self.hygrometers = self.get_pkg_instances_from_sensor_config(hygrometers_config)
+        self.hygrometers = utils.get_config_prop(
+            hygrometers_config, "sensors", required=True
+        )
 
         self.environment_sensors = {
             "temperature": [],
@@ -140,35 +138,37 @@ class PiPlant(PolledSensor):
         env_temp_config = utils.get_config_prop(
             environment_config, "temperature", required=False
         )
-        self.environment_sensors[
-            "temperature"
-        ] = self.get_pkg_instances_from_sensor_config(env_temp_config)
+        self.environment_sensors["temperature"] = utils.get_config_prop(
+            env_temp_config, "sensors", required=True
+        )
 
         env_hum_config = utils.get_config_prop(
             environment_config, "humidity", required=False
         )
-        self.environment_sensors[
-            "humidity"
-        ] = self.get_pkg_instances_from_sensor_config(env_hum_config)
+        self.environment_sensors["humidity"] = utils.get_config_prop(
+            env_hum_config, "sensors", required=True
+        )
 
         env_press_config = utils.get_config_prop(
             environment_config, "pressure", required=False
         )
-        self.environment_sensors[
-            "pressure"
-        ] = self.get_pkg_instances_from_sensor_config(env_press_config)
+        self.environment_sensors["pressure"] = utils.get_config_prop(
+            env_press_config, "sensors", required=True
+        )
 
         env_bright_config = utils.get_config_prop(
             environment_config, "brightness", required=False
         )
-        self.environment_sensors[
-            "brightness"
-        ] = self.get_pkg_instances_from_sensor_config(env_bright_config)
+        self.environment_sensors["brightness"] = utils.get_config_prop(
+            env_bright_config, "sensors", required=True
+        )
 
-        self.device_sensors = self.get_pkg_instances_from_sensor_config(device_config)
+        self.device_sensors = utils.get_config_prop(
+            device_config, "sensors", required=True
+        )
 
         ######################################################################
-        # light manager packages
+        # light managers
         ######################################################################
 
         sm_config = utils.get_config_prop(lights_config, "schedule_manager")
@@ -178,13 +178,9 @@ class PiPlant(PolledSensor):
         if enabled:
             self.log.info("Initializing lights schedule manager")
             schedules = utils.get_config_prop(sm_config, "schedules", required=True)
-            device_groups_config = utils.get_config_prop(
+            device_groups = utils.get_config_prop(
                 sm_config, "device_groups", required=True
             )
-            package_refs = utils.get_config_prop(
-                device_groups_config, "package_refs", required=True
-            )
-            device_groups = self.get_package_instances(package_refs)
 
             self.schedule_manager = ScheduleManager(schedules, device_groups)
 
@@ -194,22 +190,10 @@ class PiPlant(PolledSensor):
 
         if enabled:
             self.log.info("Initializing light motion trigger manager")
-            motion_sensors_config = utils.get_config_prop(
-                mtm_config, "sensors", required=True
-            )
-            package_refs = utils.get_config_prop(
-                motion_sensors_config, "package_refs", required=True
-            )
-            motion_sensors = self.get_package_instances(package_refs)
-
-            device_groups_config = utils.get_config_prop(
+            motion_sensors = utils.get_config_prop(mtm_config, "sensors", required=True)
+            device_groups = utils.get_config_prop(
                 mtm_config, "device_groups", required=True
             )
-            package_refs = utils.get_config_prop(
-                device_groups_config, "package_refs", required=True
-            )
-            device_groups = self.get_package_instances(package_refs)
-
             on_motion_trigger_config = utils.get_config_prop(
                 mtm_config, "on_motion_trigger", required=True
             )
@@ -226,17 +210,13 @@ class PiPlant(PolledSensor):
                 timeout=timeout,
             )
 
-        self.log.info("Packages initialized")
-
         ######################################################################
         # display package
         ######################################################################
 
         if self._display_enabled:
             self.log.info("Initializing display")
-            driver_config = utils.get_config_prop(display_config, "driver")
-            packageref = utils.get_config_prop(driver_config, "package_ref")
-            display_driver = self.get_package_instance(packageref)
+            display_driver = utils.get_config_prop(display_config, "driver")
 
             skip_splash_screen = utils.get_config_prop(
                 display_config, "skip_splash_screen", default="false", dehumanized=True
@@ -316,47 +296,6 @@ class PiPlant(PolledSensor):
         seconds = self._poll_interval_seconds
         self.log.debug("Pausing for {} seconds...".format(seconds))
         time.sleep(seconds)
-
-    def get_package_instance(self, name):
-        return self._package_instances[name]
-
-    def get_package_instances(self, names):
-        return [self.get_package_instance(name) for name in names]
-
-    def _get_package_instances_from_config(self, packages, mock=False):
-        instances = dict()
-        for pkg in packages:
-            name = utils.get_config_prop(pkg, "name", required=True)
-            package = utils.get_config_prop(pkg, "package", required=True)
-            kwargs = utils.get_config_prop(package, "kwargs", required=False)
-
-            if kwargs is not None:
-                paths = utils.find_paths_to_key(kwargs, "package_refs")
-                for keys in paths:
-                    package_refs = utils.get_by_path(kwargs, keys)
-                    insts = [instances[name] for name in package_refs]
-                    utils.del_by_path(kwargs, keys)
-                    utils.set_by_path(kwargs, keys[:-1], insts)
-
-                paths = utils.find_paths_to_key(kwargs, "package_ref")
-                for keys in paths:
-                    package_ref = utils.get_by_path(kwargs, keys)
-                    inst = instances[package_ref]
-                    utils.del_by_path(kwargs, keys)
-                    utils.set_by_path(kwargs, keys[:-1], inst)
-
-            instance = DynamicPackage(package, mock)
-            instances[name] = instance
-
-        return instances
-
-    def get_pkg_instances_from_sensor_config(self, config):
-        sensor_config = utils.get_config_prop(config, "sensors", required=True)
-        package_refs = utils.get_config_prop(
-            sensor_config, "package_refs", required=True
-        )
-
-        return self.get_package_instances(package_refs)
 
 
 if __name__ == "__main__":
