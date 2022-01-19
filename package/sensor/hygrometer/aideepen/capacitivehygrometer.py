@@ -15,6 +15,7 @@ class CapacitiveHygrometer(Hygrometer):
     ):
         if name is None:
             self.name = "Hygrometer #" + str(adc_channel)
+        self.name = name
 
         self._adc_channel = adc_channel
         self._min_value = min_value

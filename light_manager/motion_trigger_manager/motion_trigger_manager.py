@@ -14,7 +14,7 @@ class MotionTriggerManager:
         on_motion_trigger,
         on_motion_timeout,
         device_groups,
-        timeout="5m",
+        timeout="10s",
         debug=False,
     ):
         self.log = logging.getLogger(self.__class__.__name__)
@@ -48,31 +48,35 @@ class MotionTriggerManager:
             group.set_hsbk(hsbk, transition_seconds)
 
     def on_motion_trigger(self, hsbk, transition_seconds=0):
-        if self._current_hsbk != hsbk:
-            self.log.info("motion triggered - activating light groups")
-            self.log.debug(
-                "HSBK: {}, transition_seconds: {}".format(
-                    self._on_motion_trigger_hsbk,
-                    self._on_motion_timeout_transition,
-                )
+        if self._current_hsbk == hsbk:
+            return 
+            
+        self.log.info("motion triggered - activating light groups")
+        self.log.debug(
+            "HSBK: {}, transition_seconds: {}".format(
+                self._on_motion_trigger_hsbk,
+                self._on_motion_timeout_transition,
             )
-            self.on_motion(hsbk, transition_seconds=transition_seconds)
-            self._current_hsbk = hsbk
+        )
+        self.on_motion(hsbk, transition_seconds=transition_seconds)
+        self._current_hsbk = hsbk
 
     def on_motion_timeout(self, hsbk, transition_seconds=0):
-        if self._current_hsbk != hsbk:
-            self.log.info("motion timeout - deactivating light groups")
-            self.log.debug(
-                "HSBK: {}, transition_seconds: {}".format(
-                    self._on_motion_trigger_hsbk,
-                    self._on_motion_timeout_transition,
-                )
+        if self._current_hsbk == hsbk:
+            return
+
+        self.log.info("motion timeout - deactivating light groups")
+        self.log.debug(
+            "HSBK: {}, transition_seconds: {}".format(
+                self._on_motion_trigger_hsbk,
+                self._on_motion_timeout_transition,
             )
-            try:
-                self.on_motion(hsbk, transition_seconds=transition_seconds)
-                self._current_hsbk = hsbk
-            except DeviceGroupError as e:
-                self.log.error(e)
+        )
+        try:
+            self.on_motion(hsbk, transition_seconds=transition_seconds)
+            self._current_hsbk = hsbk
+        except DeviceGroupError as e:
+            self.log.error(e)
 
     def process(self):
         motion_detection = any([sensor.motion for sensor in self.motion_sensors])

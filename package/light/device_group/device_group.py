@@ -10,10 +10,15 @@ class DeviceGroupError(Exception):
 
 
 class DeviceGroup:
-    def __init__(self, name, devices, query_interval="2m"):
+    def __init__(
+        self, name, devices, query_interval="2m", retry_interval="2s", max_retries=5
+    ):
         self._group_name = name
-        self._query_interval_seconds = utils.dehumanize(query_interval)
         self._devices = devices
+
+        self._query_interval_seconds = utils.dehumanize(query_interval)
+        self._retry_interval_seconds = utils.dehumanize(retry_interval)
+        self._max_retries = max_retries
 
         self._power = [False] * len(devices)
         self._hsbk = [[0, 0, 0, 0]] * len(devices)
@@ -54,6 +59,27 @@ class DeviceGroup:
             "Sub-classes of {} should implement function {}".format(
                 self.__class__.__name__, self.set_hsbk.__name__
             )
+        )
+
+    def do(self, doFunc, *args):
+        retries = 0
+        err = None
+
+        while retries <= self._max_retries:
+            try:
+                self.log.debug("Do {} on DeviceGroup".format(doFunc.__name__, self.name))
+                import random
+                if random.choice([False, True]):
+                    raise DeviceGroupError("test")
+                return doFunc(*args)
+            except DeviceGroupError as e:
+                err = e
+                self.log.warning("an error occurred communicating with DeviceGroup {}".format(self.name))
+                time.sleep(self._retry_interval_seconds)
+                retries += 1
+
+        raise DeviceGroupError(
+            "unable to do {} on DeviceGroup {}: {}".format(doFunc.__name__, self.name, err)
         )
 
     @property
