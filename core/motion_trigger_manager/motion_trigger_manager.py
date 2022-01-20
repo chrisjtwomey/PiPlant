@@ -10,20 +10,20 @@ class MotionTriggerManager:
 
     def __init__(
         self,
-        sensors,
+        device_groups,
+        motion_sensors,
         on_motion_trigger,
         on_motion_timeout,
-        device_groups,
-        timeout="10s",
+        timeout_seconds=10,
         debug=False,
     ):
         self.log = logging.getLogger(self.__class__.__name__)
         self.debug = debug
 
-        self.motion_sensors = sensors
+        self.motion_sensors = motion_sensors
 
         self._pir_detection_time = 0
-        self._motion_timeout_seconds = utils.dehumanize(timeout)
+        self._motion_timeout_seconds = timeout_seconds
 
         self._on_motion_trigger_hsbk = [0, 0, 0, 0]
         self._on_motion_trigger_transition = self.DEFAULT_TRANSITION_SECONDS
@@ -49,8 +49,8 @@ class MotionTriggerManager:
 
     def on_motion_trigger(self, hsbk, transition_seconds=0):
         if self._current_hsbk == hsbk:
-            return 
-            
+            return
+
         self.log.info("motion triggered - activating light groups")
         self.log.debug(
             "HSBK: {}, transition_seconds: {}".format(
@@ -78,7 +78,7 @@ class MotionTriggerManager:
         except DeviceGroupError as e:
             self.log.error(e)
 
-    def process(self):
+    def run(self):
         motion_detection = any([sensor.motion for sensor in self.motion_sensors])
 
         nowtime = time.time()

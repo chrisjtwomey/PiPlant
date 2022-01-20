@@ -1,0 +1,105 @@
+---
+- name: sqlite-driver
+  package:
+    module: database.driver.sqlite3.driver
+    kwargs:
+      dbdata_path: piplant.db
+- name: hygrometer-adc-1
+  package: 
+    module: sensor.hygrometer.aideepen.capacitivehygrometer
+    kwargs:
+      name: "Fukien Tea"
+      adc_channel: 1
+      min_value: 0.30
+      max_value: 0.70
+      dry_value_percentage: 25
+- name: hygrometer-adc-2
+  package: 
+    module: sensor.hygrometer.aideepen.capacitivehygrometer
+    kwargs:
+      name: "China Doll"
+      adc_channel: 2
+      min_value: 0.30
+      max_value: 0.68
+      dry_value_percentage: 35
+- name: hygrometer-adc-3
+  package: 
+    module: sensor.hygrometer.aideepen.capacitivehygrometer
+    kwargs:
+      name: "Emerald Palm"
+      adc_channel: 3
+      min_value: 0.30
+      max_value: 0.67
+      dry_value_percentage: 10
+- name: sensorhub
+  package: 
+    module: sensor.environment.dockerpi.sensorhub
+- name: rpi-stats
+  package: 
+    module: sensor.device.raspberrypi.devicestatistics
+- name: epd
+  package: 
+    remote_module: rpi_epd3in7.epd
+    module: display.driver.epd.mock
+- name: lifx-desk-trio-left
+  package:
+    remote_module: lifxlan.light
+    module: light.device.lifx.mock
+    kwargs:
+      mac_addr: d0:73:d5:6d:59:2d
+      ip_addr: 192.168.1.29 
+- name: lifx-desk-trio-middle
+  package:
+    remote_module: lifxlan.light
+    module: light.device.lifx.mock
+    kwargs:
+      mac_addr: d0:73:d5:6b:cc:29
+      ip_addr: 192.168.1.28
+- name: lifx-desk-trio-right
+  package:
+    remote_module: lifxlan.light
+    module: light.device.lifx.mock
+    kwargs:
+      mac_addr: d0:73:d5:6a:12:7a
+      ip_addr: 192.168.1.30
+- name: lifx-monitor-lamp
+  package:
+    remote_module: lifxlan.light
+    module: light.device.lifx.mock
+    kwargs:
+      mac_addr: d0:73:d5:6b:61:51
+      ip_addr: 192.168.1.39
+- name: lifx-office-corner-lamp
+  package:
+    remote_module: lifxlan.light
+    module: light.device.lifx.mock
+    kwargs:
+      mac_addr: d0:73:d5:6d:8f:b1
+      ip_addr: 192.168.1.27
+- name: lifx-desk-strip
+  package:
+    remote_module: lifxlan.light
+    module: light.device.lifx.mock
+    kwargs:
+      mac_addr: d0:73:d5:43:c8:eb
+      ip_addr: 192.168.1.40 
+- name: lifx-group-plant-lights
+  package:
+    module: light.device_group.lifx.device_group
+    kwargs:
+      name: plant_lights
+      devices:
+        package_refs:
+          - lifx-monitor-lamp
+          - lifx-desk-trio-left
+          - lifx-desk-trio-middle
+          - lifx-desk-trio-right
+- name: lifx-group-motion-lights
+  package:
+    module: light.device_group.lifx.device_group
+    kwargs:
+      name: motion_lights
+      devices:
+        package_refs:
+          - lifx-office-corner-lamp
+          - lifx-desk-strip

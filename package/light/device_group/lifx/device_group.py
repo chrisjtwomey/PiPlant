@@ -15,7 +15,7 @@ class LifxDeviceGroup(DeviceGroup):
     def set_power(self, power, transition_seconds=0) -> None:
         if power == self.power:
             return
-            
+
         def _set_power(power, transition_seconds=0):
             try:
                 self.lifxgroup.set_power(power, duration=transition_seconds)

@@ -1,13 +1,13 @@
-from sensor.sensor import Sensor
+from core.sensor_manager.sensor import Sensor
 
 
 class DeviceSensor(Sensor):
     def __init__(self, **kwargs):
+        self.type = "device"
         super().__init__()
 
     def get_data(self) -> dict:
         return {
-            "name": self.name,
             "cpu_temperature": self.cpu_temperature,
             "gpu_temperature": self.gpu_temperature,
             "cpu_throttle": self.cpu_throttle,

@@ -11,5 +11,5 @@ class MockHygrometer(Hygrometer):
         super().__init__(dry_value_percentage)
 
     @property
-    def percentage(self) -> int:
+    def moisture_percentage(self) -> int:
         return random.randrange(0, 100)

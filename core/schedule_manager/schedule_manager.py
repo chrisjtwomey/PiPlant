@@ -5,7 +5,7 @@ from package.light.device_group.device_group import DeviceGroupError
 
 
 class ScheduleManager:
-    def __init__(self, schedules, device_groups, debug=False):
+    def __init__(self, device_groups, schedules, debug=False):
         self.log = logging.getLogger(self.__class__.__name__)
         self.debug = debug
 
@@ -33,7 +33,7 @@ class ScheduleManager:
 
         return hsbk, transition_seconds
 
-    def process(self):
+    def run(self):
         current_schedule = self.get_current_schedule()
         if current_schedule is None:
             return

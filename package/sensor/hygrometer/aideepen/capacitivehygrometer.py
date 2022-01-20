@@ -26,7 +26,7 @@ class CapacitiveHygrometer(Hygrometer):
         super().__init__(dry_value_percentage)
 
     @property
-    def percentage(self) -> int:
+    def moisture_percentage(self) -> int:
         def perc_in_range(val, min, max):
             return ((val - min) * 100) / (max - min)
 

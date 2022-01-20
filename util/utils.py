@@ -1,15 +1,12 @@
 import re
 import datetime
 import operator
-from functools import reduce  # forward compatibility for Python 3
+from functools import reduce
 
 
 def get_by_path(root, items):
     """Access a nested object in root by item sequence."""
-    val = reduce(operator.getitem, items, root)
-    if isinstance(val, str):
-        val = [val]
-    return val
+    return reduce(operator.getitem, items, root)
 
 
 def set_by_path(root, items, value):
@@ -33,9 +30,9 @@ def dehumanize(human_str):
         else:
             return _dehumanize_boolean(human_str)
     except ValueError as ve:
-        raise ('Unable to dehumanize "{}": {}'.format(human_str, str(ve)))
+        raise ValueError('Unable to dehumanize "{}": {}'.format(human_str, str(ve)))
     except Exception as e:
-        raise ('Unexpected error dehumanizing "{}": {}'.format(human_str, str))
+        raise ValueError('Unexpected error dehumanizing "{}": {}'.format(human_str, str))
 
 
 def _dehumanize_time(quantity, unit):
@@ -132,20 +129,17 @@ def find_paths_to_key(d, *target_keys):
 
 
 def get_config_prop_by_keys(
-    config, keys, default=None, required=True, dehumanized=False
+    config, *keys, default=None, required=True, dehumanized=False
 ):
     val = default
+    found_vals = [get_by_path(config, keys)]
 
-    traversed_config = config
-    for key in keys:
-        if key not in traversed_config:
-            if default is None and required is True:
-                raise KeyError("{} not in config but is required".format(key))
-            return default
+    if len(found_vals) == 0:
+        if default is None and required is True:
+            raise KeyError("{} not in config but is required".format(".".join(keys)))
+    else:
+        val = found_vals[0]
 
-        traversed_config = traversed_config[key]
-
-    val = traversed_config
     if dehumanized:
         val = dehumanize(val)
 
@@ -154,12 +148,13 @@ def get_config_prop_by_keys(
 
 def get_config_prop(config, prop, default=None, required=True, dehumanized=False):
     val = default
+
     if prop not in config:
         if default is None and required is True:
             raise KeyError("{} not in config but is required".format(prop))
-        return default
+    else:
+        val = config[prop]
 
-    val = config[prop]
     if dehumanized:
         val = dehumanize(val)
 

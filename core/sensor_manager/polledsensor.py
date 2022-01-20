@@ -1,7 +1,7 @@
 import math
 import time
 from datetime import datetime
-from sensor.sensor import Sensor
+from .sensor import Sensor
 
 
 class PolledSensor(Sensor):

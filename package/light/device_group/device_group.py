@@ -67,19 +67,28 @@ class DeviceGroup:
 
         while retries <= self._max_retries:
             try:
-                self.log.debug("Do {} on DeviceGroup".format(doFunc.__name__, self.name))
+                self.log.debug(
+                    "Do {} on DeviceGroup".format(doFunc.__name__, self.name)
+                )
                 import random
+
                 if random.choice([False, True]):
                     raise DeviceGroupError("test")
                 return doFunc(*args)
             except DeviceGroupError as e:
                 err = e
-                self.log.warning("an error occurred communicating with DeviceGroup {}".format(self.name))
+                self.log.warning(
+                    "an error occurred communicating with DeviceGroup {}".format(
+                        self.name
+                    )
+                )
                 time.sleep(self._retry_interval_seconds)
                 retries += 1
 
         raise DeviceGroupError(
-            "unable to do {} on DeviceGroup {}: {}".format(doFunc.__name__, self.name, err)
+            "unable to do {} on DeviceGroup {}: {}".format(
+                doFunc.__name__, self.name, err
+            )
         )
 
     @property

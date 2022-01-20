@@ -1,11 +1,14 @@
 import time
 import logging
+import uuid
 
 
 class Sensor:
     def __init__(self):
         if not hasattr(self, "name") or self.name == None:
             self.name = self.__class__.__name__
+
+        self.id = uuid.uuid4()
 
         self._data = dict()
         self.log = logging.getLogger(str(self.name))

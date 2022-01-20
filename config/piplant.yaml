@@ -1,214 +1,85 @@
 ---
-piplant:
-  database:
-    driver:
-      package_ref: sqlite-driver
-  display:
-    enabled: true
-    driver:
-      package_ref: epd
-    refresh_schedule:
-      - "09:00"
-      - "12:00"
-      - "15:00"
-      - "18:00"
-      - "21:00"
-    skip_splash_screen: false
-  hygrometers:
-    sensors:
-      package_refs:
-        - hygrometer-adc-1
-        - hygrometer-adc-2
-        - hygrometer-adc-3
-  device:
-    sensors:
-      package_refs:
-        - rpi-stats
-  environment:
-    temperature: 
-      sensors:
-        package_refs:
-          - sensorhub
-    humidity: 
-      sensors:
-        package_refs:
-          - sensorhub
-    brightness:
-      sensors:
-        package_refs:
-          - sensorhub
-    pressure: 
-      sensors:
-        package_refs:
-          - sensorhub
-    motion: 
-      sensors:
-        package_refs:
-          - sensorhub
-  lights:
-    schedule_manager:
-      enabled: true
-      device_query_interval: 2m
-      device_groups:
-        package_refs:
-          - lifx-group-plant-lights
-      schedules:
-        - name: sleep
-          time: "00:00"
-          hsbk:
-            brightness: 0%
-            kelvin: 2000
-        - name: wakeup
-          time: "07:30"
-          transition: 15m
-          hsbk:
-            brightness: 80%
-            kelvin: 2000
-        - name: daytime
-          time: "08:00"
-          transition: 10m
-          hsbk:
-            brightness: 100%
-            kelvin: 5000
-        - name: evening
-          time: "20:00"
-          transition: 5h
-          hsbk:
-            brightness: 80%
-            kelvin: 3500
-        - name: nightlight
-          time: "21:00"
-          transition: 10m
-          hsbk:
-            brightness: 65%
-            kelvin: 2750
-        - name: sleep
-          time: "23:00"
-          transition: 1m
-          hsbk:
-            brightness: 0%
-            kelvin: 2000
-    motion_trigger_manager:
-      enabled: true
-      timeout: 15m
-      sensors:
-        package_refs:
-          - sensorhub
-      device_groups:
-        package_refs:
-          - lifx-group-motion-lights
-      on_motion_trigger:
-        transition: 0s
-        hsbk:
-          brightness: 45%
-          kelvin: 3000
-      on_motion_timeout:
-        transition: 10s
-        hsbk:
-          brightness: 0%
-          kelvin: 3000
-packages:
-  - name: sqlite-driver
-    package:
-      module: db.driver.sqlite3.driver
-      kwargs:
-        dbdata_path: piplant.db
-  - name: hygrometer-adc-1
-    package: 
-      module: sensor.hygrometer.aideepen.capacitivehygrometer
-      kwargs:
-        name: "Fukien Tea"
-        adc_channel: 1
-        min_value: 0.30
-        max_value: 0.70
-        dry_value_percentage: 25
-  - name: hygrometer-adc-2
-    package: 
-      module: sensor.hygrometer.aideepen.capacitivehygrometer
-      kwargs:
-        name: "China Doll"
-        adc_channel: 2
-        min_value: 0.30
-        max_value: 0.68
-        dry_value_percentage: 35
-  - name: hygrometer-adc-3
-    package: 
-      module: sensor.hygrometer.aideepen.capacitivehygrometer
-      kwargs:
-        name: "Emerald Palm"
-        adc_channel: 3
-        min_value: 0.30
-        max_value: 0.67
-        dry_value_percentage: 10
-  - name: sensorhub
-    package: 
-      module: sensor.environment.dockerpi.sensorhub
-  - name: rpi-stats
-    package: 
-      module: sensor.device.raspberrypi.devicestatistics
-  - name: epd
-    package: 
-      remote_module: rpi_epd3in7.epd
-      module: display.driver.epd.mock
-  - name: lifx-desk-trio-left
-    package:
-      remote_module: lifxlan.light
-      module: light.device.lifx.mock
-      kwargs:
-        mac_addr: d0:73:d5:6d:59:2d
-        ip_addr: 192.168.1.29 
-  - name: lifx-desk-trio-middle
-    package:
-      remote_module: lifxlan.light
-      module: light.device.lifx.mock
-      kwargs:
-        mac_addr: d0:73:d5:6b:cc:29
-        ip_addr: 192.168.1.28
-  - name: lifx-desk-trio-right
-    package:
-      remote_module: lifxlan.light
-      module: light.device.lifx.mock
-      kwargs:
-        mac_addr: d0:73:d5:6a:12:7a
-        ip_addr: 192.168.1.30
-  - name: lifx-monitor-lamp
-    package:
-      remote_module: lifxlan.light
-      module: light.device.lifx.mock
-      kwargs:
-        mac_addr: d0:73:d5:6b:61:51
-        ip_addr: 192.168.1.39
-  - name: lifx-office-corner-lamp
-    package:
-      remote_module: lifxlan.light
-      module: light.device.lifx.mock
-      kwargs:
-        mac_addr: d0:73:d5:6d:8f:b1
-        ip_addr: 192.168.1.27
-  - name: lifx-desk-strip
-    package:
-      remote_module: lifxlan.light
-      module: light.device.lifx.mock
-      kwargs:
-        mac_addr: d0:73:d5:43:c8:eb
-        ip_addr: 192.168.1.40 
-  - name: lifx-group-plant-lights
-    package:
-      module: light.device_group.lifx.device_group
-      kwargs:
-        name: plant_lights
-        devices:
-          package_refs:
-            - lifx-monitor-lamp
-            - lifx-desk-trio-left
-            - lifx-desk-trio-middle
-            - lifx-desk-trio-right
-  - name: lifx-group-motion-lights
-    package:
-      module: light.device_group.lifx.device_group
-      kwargs:
-        name: motion_lights
-        devices:
-          package_refs:
-            - lifx-office-corner-lamp
-            - lifx-desk-strip
+database_manager:
+  driver:
+    package_ref: sqlite-driver
+display_manager:
+  enabled: true
+  driver:
+    package_ref: epd
+  refresh_schedule:
+    - "09:00"
+    - "12:00"
+    - "15:00"
+    - "18:00"
+    - "21:00"
+  skip_splash_screen: false
+sensor_manager:
+  sensors:
+    package_refs:
+      - hygrometer-adc-1
+      - hygrometer-adc-2
+      - hygrometer-adc-3
+      - sensorhub
+      - rpi-stats
+motion_trigger_manager:
+  enabled: true
+  query_interval: 2s
+  timeout: 10s
+  sensors:
+    package_refs:
+      - sensorhub
+  device_groups:
+    package_refs:
+      - lifx-group-motion-lights
+  on_motion_trigger:
+    transition: 0s
+    hsbk:
+      brightness: 45%
+      kelvin: 3000
+  on_motion_timeout:
+    transition: 10s
+    hsbk:
+      brightness: 0%
+      kelvin: 3000
+schedule_manager:
+  enabled: true
+  query_interval: 2m
+  device_groups:
+    package_refs:
+      - lifx-group-plant-lights
+  schedules:
+    - name: sleep
+      time: "00:00"
+      hsbk:
+        brightness: 0%
+        kelvin: 2000
+    - name: wakeup
+      time: "07:30"
+      transition: 15m
+      hsbk:
+        brightness: 80%
+        kelvin: 2000
+    - name: daytime
+      time: "08:00"
+      transition: 10m
+      hsbk:
+        brightness: 100%
+        kelvin: 5000
+    - name: evening
+      time: "20:00"
+      transition: 5h
+      hsbk:
+        brightness: 80%
+        kelvin: 3500
+    - name: nightlightgit
+      time: "21:00"
+      transition: 10m
+      hsbk:
+        brightness: 65%
+        kelvin: 2750
+    - name: sleep
+      time: "23:00"
+      transition: 1m
+      hsbk:
+        brightness: 0%
+        kelvin: 2000

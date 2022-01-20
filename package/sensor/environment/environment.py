@@ -1,14 +1,13 @@
-from sensor.sensor import Sensor
+from core.sensor_manager.sensor import Sensor
 
 
 class TemperatureSensor(Sensor):
     def __init__(self, **kwargs):
+        self.type = "temperature"
         super().__init__()
 
     def get_data(self) -> dict:
-        return {
-            "temperature": self.temperature,
-        }
+        return self.temperature
 
     @property
     def temperature(self) -> int:
@@ -22,12 +21,11 @@ class TemperatureSensor(Sensor):
 
 class BrightnessSensor(Sensor):
     def __init__(self, **kwargs):
+        self.type = "brightness"
         super().__init__()
 
     def get_data(self) -> dict:
-        return {
-            "brightness": self.brightness,
-        }
+        return self.brightness
 
     @property
     def brightness(self) -> int:
@@ -41,12 +39,11 @@ class BrightnessSensor(Sensor):
 
 class HumiditySensor(Sensor):
     def __init__(self, **kwargs):
+        self.type = "humidity"
         super().__init__()
 
     def get_data(self) -> dict:
-        return {
-            "humidity": self.humidity,
-        }
+        return self.humidity
 
     @property
     def humidity(self) -> int:
@@ -60,10 +57,11 @@ class HumiditySensor(Sensor):
 
 class PressureSensor(Sensor):
     def __init__(self, **kwargs):
+        self.type = "pressure"
         super().__init__()
 
     def get_data(self) -> dict:
-        return {"pressure": self.pressure}
+        return self.pressure
 
     @property
     def pressure(self) -> int:
@@ -77,10 +75,11 @@ class PressureSensor(Sensor):
 
 class MotionSensor(Sensor):
     def __init__(self, **kwargs):
+        self.type = "motion"
         super().__init__()
 
     def get_data(self) -> dict:
-        return {"motion": self.motion}
+        return self.motion
 
     @property
     def motion(self) -> bool:
@@ -96,6 +95,7 @@ class EnvironmentAll(
     TemperatureSensor, BrightnessSensor, HumiditySensor, PressureSensor, MotionSensor
 ):
     def __init__(self, **kwargs):
+        self.type = "env_all"
         super().__init__()
 
     def get_data(self) -> dict:

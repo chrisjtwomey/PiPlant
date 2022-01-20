@@ -64,8 +64,7 @@ class PackageImporter:
         paths = utils.find_paths_to_key(config, self.PACKAGE_REF_KEY)
 
         for keys in paths:
-            package_refs = utils.get_by_path(config, keys)
-            package_ref = package_refs[0]
+            package_ref = utils.get_by_path(config, keys)
 
             inst = self.get_instance(package_ref)
             utils.del_by_path(config, keys)

@@ -1,11 +1,11 @@
 import time
 import logging
-
+import util.utils as utils
 from datetime import datetime
 from .pil.pil import PILUtil
 
 
-class EPaper:
+class DisplayManager:
     WATER_PERCENT_0_DEGREES = 90
     WATER_PERCENT_100_DEGREES = 330
 
@@ -17,17 +17,20 @@ class EPaper:
     HOURS_IN_DAY = 24
     HOURS_IN_WEEK = 168
 
-    def __init__(self, epd, config, debug=False):
-        self.log = logging.getLogger("e-Paper")
+    def __init__(self, driver, refresh_schedule, splash_screen=True, debug=False):
+        self.log = logging.getLogger(self.__class__.__name__)
         self.log.debug("Initializing...")
 
         # write display to file and don't sent to e-Paper
         self.debug = debug
-        self.config = config
-        self.epd = epd
+        self.driver = driver
 
-        self.width = self.epd.height
-        self.height = self.epd.width
+        self._refresh_schedule = refresh_schedule
+        self._current_render_hour = None
+        self._render_time = 0
+
+        self.width = self.driver.height
+        self.height = self.driver.width
         self.util = PILUtil(self.width, self.height)
 
         self.step = self.STEP_ENVIRONMENT
@@ -37,6 +40,27 @@ class EPaper:
         self.margin_px = 5
 
         self.log.debug("Initialized")
+
+        if splash_screen:
+            self.draw_splash_screen()
+
+    def run(self):
+        nowdate = datetime.datetime.now()
+        latest_render_hour = None
+        for render_hour in self._render_schedule:
+            render_hour_dt = utils.hour_to_datetime(render_hour)
+
+            if nowdate >= render_hour_dt:
+                latest_render_hour = render_hour_dt
+
+        if self._current_render_hour != latest_render_hour:
+            # data = self._value
+
+            # self.draw_data(data)
+            self.sleep()
+
+            self._render_time = time.time()
+            self._current_render_hour = latest_render_hour
 
     def flush(self):
         self.log.debug("Flushing")
@@ -75,11 +99,11 @@ class EPaper:
             y + rH / 2,
             rW,
             rH,
-            fill=self.epd.GRAY4,
-            outline=self.epd.GRAY4,
+            fill=self.driver.GRAY4,
+            outline=self.driver.GRAY4,
             radius=1,
         )
-        self.util.draw_text(font, dt_txt, x, y, fill=self.epd.GRAY1, align="center")
+        self.util.draw_text(font, dt_txt, x, y, fill=self.driver.GRAY1, align="center")
 
     def draw_hygrometer_data(self, data):
         def draw_sensor_data(id, data, coords):
@@ -135,7 +159,7 @@ class EPaper:
                     r,
                     min_ang,
                     poor_water_level_ang,
-                    fill=self.epd.GRAY4,
+                    fill=self.driver.GRAY4,
                     width=1,
                 )
                 # draw water remaining
@@ -145,7 +169,7 @@ class EPaper:
                     r,
                     poor_water_level_ang,
                     water_level_ang,
-                    fill=self.epd.GRAY4,
+                    fill=self.driver.GRAY4,
                     width=1,
                 )
                 # get start point on arc to draw water level
@@ -433,13 +457,13 @@ class EPaper:
         #     self.draw_to_display(frame)
 
     def draw_to_display(self, frame):
-        self.epd.init()
-        self.epd.clear()
-        self.epd.display(frame)
+        self.driver.init()
+        self.driver.clear()
+        self.driver.display(frame)
 
     def sleep(self):
         if not self.debug:
-            self.epd.sleep()
+            self.driver.sleep()
 
     def delay_ms(self, delaytime):
         time.sleep(delaytime / 1000.0)
