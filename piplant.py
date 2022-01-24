@@ -4,6 +4,7 @@ import yaml
 import time
 import datetime
 import argparse
+import schedule
 import logging.config
 import util.utils as utils
 from package.package import PackageImporter
@@ -165,18 +166,23 @@ class PiPlant:
                 debug=self.debug,
             )
 
-    def run(self):
+    def schedule(self):
         if self.schedule_manager is not None:
-            self.schedule_manager.run()
+            schedule.every(10).minutes.do(self.sensor_manager.run)
 
         if self.motion_trigger_manager is not None:
-            self.motion_trigger_manager.run()
+            schedule.every().second.do(self.motion_trigger_manager.run)
 
         if self.sensor_manager is not None:
-            self.sensor_manager.run()
+            schedule.every().minute.do(self.sensor_manager.run)
 
         if self.display_manager is not None:
-            self.display_manager.run()
+            schedule.every().minute.do(self.display_manager.run)
+
+    def run(self):
+        while True:
+            schedule.run_pending()
+            time.sleep(1)
 
 
 if __name__ == "__main__":
@@ -201,4 +207,5 @@ if __name__ == "__main__":
     packages_config = yaml.safe_load(args.packages)
 
     piplant = PiPlant(config, packages_config, mock=args.mock, debug=args.debug)
+    piplant.schedule()
     piplant.run()

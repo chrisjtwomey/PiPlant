@@ -32,7 +32,9 @@ def dehumanize(human_str):
     except ValueError as ve:
         raise ValueError('Unable to dehumanize "{}": {}'.format(human_str, str(ve)))
     except Exception as e:
-        raise ValueError('Unexpected error dehumanizing "{}": {}'.format(human_str, str))
+        raise ValueError(
+            'Unexpected error dehumanizing "{}": {}'.format(human_str, str)
+        )
 
 
 def _dehumanize_time(quantity, unit):

@@ -45,9 +45,9 @@ class DisplayManager:
             self.draw_splash_screen()
 
     def run(self):
-        nowdate = datetime.datetime.now()
+        nowdate = datetime.now()
         latest_render_hour = None
-        for render_hour in self._render_schedule:
+        for render_hour in self._refresh_schedule:
             render_hour_dt = utils.hour_to_datetime(render_hour)
 
             if nowdate >= render_hour_dt:
