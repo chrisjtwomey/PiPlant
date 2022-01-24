@@ -86,7 +86,7 @@ class PiPlant:
 
         # sensor manager
         sensors = utils.get_config_prop_by_keys(config, "sensor_manager", "sensors")
-        self.sensor_manager = SensorManager(sensors)
+        self.sensor_manager = SensorManager(sensors, self.database_manager)
 
         # schedule manager
         enabled = utils.get_config_prop_by_keys(
@@ -178,6 +178,12 @@ class PiPlant:
 
         if self.display_manager is not None:
             schedule.every().minute.do(self.display_manager.run)
+
+    def run_once(self):
+        self.sensor_manager.run()
+        self.motion_trigger_manager.run()
+        self.schedule_manager.run()
+        self.display_manager.run()
 
     def run(self):
         while True:

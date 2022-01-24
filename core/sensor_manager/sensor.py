@@ -9,6 +9,7 @@ class Sensor:
             self.name = self.__class__.__name__
 
         self.id = uuid.uuid4()
+        self.type = "generic"
 
         self._data = dict()
         self.log = logging.getLogger(str(self.name))
@@ -19,8 +20,12 @@ class Sensor:
     @property
     def data(self):
         try:
-            data = self.get_data()
+            data = dict()
+            value = self.get_data()
+            data["id"] = str(self.id)
             data["name"] = self.name
+            data["value"] = value
+            data["type"] = self.type
             data["time"] = int(time.time())
 
             self._data = data
