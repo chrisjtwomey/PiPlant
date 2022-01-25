@@ -58,7 +58,7 @@ class SQLiteDriver(DatabaseDriver):
         return results
 
     def insert(self, table_name, values):
-        formatted_values = "(" + ",".join(map(str, values)) + ")"
+        formatted_values = self._format_values(values)
 
         with self._conn as db:
             db.execute(
@@ -67,3 +67,15 @@ class SQLiteDriver(DatabaseDriver):
 
     def _check_connection(self):
         return self._conn is not None
+
+    def _format_values(self, values):
+        parsed_values = []
+        for value in values:
+            if isinstance(value, str):
+                value = "'{}'".format(value)
+
+            parsed_values.append(value)
+
+        formatted_values = "(" + ",".join(map(str, parsed_values)) + ")"
+
+        return formatted_values

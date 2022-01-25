@@ -24,12 +24,13 @@ class DatabaseManager:
                     ("sensor_id", "TEXT", "PRIMARY_KEY", "NOT NULL"),
                     ("name", "TEXT", "NOT NULL"),
                     ("type", "TEXT", "NOT NULL"),
-                    ("value", "TEXT", "NOT NULL"),
+                    ("value", "REAL", "NOT NULL"),
                     ("time", "INTEGER", "NOT NULL"),
                 ],
             )
-        except Exception as e:
-            self.log.error(e)
+        except Exception as e: 
+            if "already exists" not in str(e):
+                raise e
 
     def insert_sensor_data(self, sensor_data):
         insert_rows = []

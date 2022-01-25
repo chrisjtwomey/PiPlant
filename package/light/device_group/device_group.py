@@ -70,10 +70,7 @@ class DeviceGroup:
                 self.log.debug(
                     "Do {} on DeviceGroup".format(doFunc.__name__, self.name)
                 )
-                import random
 
-                if random.choice([False, True]):
-                    raise DeviceGroupError("test")
                 return doFunc(*args)
             except DeviceGroupError as e:
                 err = e

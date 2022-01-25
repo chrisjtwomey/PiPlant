@@ -180,10 +180,17 @@ class PiPlant:
             schedule.every().minute.do(self.display_manager.run)
 
     def run_once(self):
-        self.sensor_manager.run()
-        self.motion_trigger_manager.run()
-        self.schedule_manager.run()
-        self.display_manager.run()
+        if self.schedule_manager is not None:
+            self.schedule_manager.run()
+
+        if self.motion_trigger_manager is not None:
+            self.motion_trigger_manager.run()
+
+        if self.sensor_manager is not None:
+            self.sensor_manager.run()
+
+        if self.display_manager is not None:
+            self.display_manager.run()
 
     def run(self):
         while True:
