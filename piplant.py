@@ -2,9 +2,9 @@ import sys
 import os
 import yaml
 import time
-import datetime
 import argparse
 import schedule
+import threading
 import logging.config
 import util.utils as utils
 from package.package import PackageImporter
@@ -167,30 +167,24 @@ class PiPlant:
             )
 
     def schedule(self):
-        if self.schedule_manager is not None:
-            schedule.every(10).minutes.do(self.sensor_manager.run)
-
-        if self.motion_trigger_manager is not None:
-            schedule.every().second.do(self.motion_trigger_manager.run)
+        def threaded(func):
+            run_thread = threading.Thread(target=func)
+            run_thread.start()
 
         if self.sensor_manager is not None:
-            schedule.every().minute.do(self.sensor_manager.run)
+            schedule.every().minute.do(threaded, self.sensor_manager.run)
+
+        if self.schedule_manager is not None:
+            schedule.every(10).minutes.do(threaded, self.schedule_manager.run)
+
+        if self.motion_trigger_manager is not None:
+            schedule.every().second.do(threaded, self.motion_trigger_manager.run)
 
         if self.display_manager is not None:
-            schedule.every().minute.do(self.display_manager.run)
+            schedule.every().minute.do(threaded, self.display_manager.run)
 
     def run_once(self):
-        if self.schedule_manager is not None:
-            self.schedule_manager.run()
-
-        if self.motion_trigger_manager is not None:
-            self.motion_trigger_manager.run()
-
-        if self.sensor_manager is not None:
-            self.sensor_manager.run()
-
-        if self.display_manager is not None:
-            self.display_manager.run()
+        schedule.run_all()
 
     def run(self):
         while True:
