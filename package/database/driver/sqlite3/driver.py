@@ -10,7 +10,7 @@ class SQLiteDriver(DatabaseDriver):
         super().__init__()
 
     def connect(self):
-        self._conn = sqlite3.connect(self._dbdata_path)
+        self._conn = sqlite3.connect(self._dbdata_path, check_same_thread=False)
 
     def close(self):
         if self._conn is not None:
@@ -26,25 +26,35 @@ class SQLiteDriver(DatabaseDriver):
         joined_list = ", ".join(list(joined_tuples))
         formatted_cols = "(" + str(joined_list) + ")"
 
+        query = "CREATE TABLE {} {}".format(table_name, formatted_cols)
+        self.log.debug(query)
+
         with self._conn as db:
             db.execute(
-                "CREATE TABLE {} {}".format(table_name, formatted_cols),
+                query
             )
 
-    def select(self, table_name, cols=[], where=None, order_by=None):
-        if len(cols) == 0:
-            cols = "*"
+    def select(self, table_name, cols=[], where=[], order_by=[]):
+        formatted_cols = "*"
+        if len(cols) > 0:
+            formatted_cols = ",".join(cols)
 
-        formatted_where = "" if where is None else "WHERE " + where
-        formatted_order_by = "" if order_by is None else "ORDER BY " + order_by
+        formatted_where = ""
+        if len(where) > 0:
+            formatted_where = "WHERE " + " AND ".join(where)
+
+        formatted_order_by = "" 
+        if len(order_by) > 0:
+            formatted_order_by = "ORDER BY " + ",".join(order_by)
+
+        query = "SELECT {} FROM {} {} {}".format(
+                    formatted_cols, table_name, formatted_where, formatted_order_by
+                )
+        self.log.debug(query)
 
         results = []
         with self._conn as db:
-            cur = db.execute(
-                "SELECT {} FROM {} {} {}".format(
-                    cols, table_name, formatted_where, formatted_order_by
-                )
-            )
+            cur = db.execute(query)
             col_names = [tup[0] for tup in cur.description]
             for row in cur:
                 result = dict()
@@ -57,12 +67,24 @@ class SQLiteDriver(DatabaseDriver):
 
         return results
 
-    def insert(self, table_name, values):
-        formatted_values = self._format_values(values)
+    def insert_row(self, table_name, row):
+        formatted_row = self._format_values(row)
+        query = "INSERT INTO {} VALUES {}".format(table_name, formatted_row)
+        self.log.debug(query)
 
         with self._conn as db:
             db.execute(
-                "INSERT INTO {} VALUES {}".format(table_name, formatted_values),
+                query
+            )
+
+    def insert_rows(self, table_name, rows):
+        formatted_rows = ",".join([self._format_values(row) for row in rows])
+        query = "INSERT INTO {} VALUES {}".format(table_name, formatted_rows)
+        self.log.debug(query)
+
+        with self._conn as db:
+            db.execute(
+                query
             )
 
     def _check_connection(self):

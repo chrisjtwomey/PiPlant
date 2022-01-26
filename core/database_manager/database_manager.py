@@ -32,9 +32,9 @@ class DatabaseManager:
             if "already exists" not in str(e):
                 raise e
 
-    def insert_sensor_data(self, sensor_data):
+    def insert_sensors(self, data):
         insert_rows = []
-        for data_entry in sensor_data:
+        for data_entry in data:
             row = [
                 data_entry["id"],
                 data_entry["name"],
@@ -44,13 +44,15 @@ class DatabaseManager:
             ]
             insert_rows.append(row)
 
-        for row in insert_rows:
-            self.driver.insert(self.TABLE_NAME_SENSORS, row)
+        self.driver.insert_rows(self.TABLE_NAME_SENSORS, insert_rows)
 
-    def get_sensor(self, table_name, id):
-        return self.driver.select(
-            table_name, where="sensor_id = " + id, order_by="time DESC"
-        )
+    def get_sensors(self, *ids, types=[], from_seconds=0):
+        where = []
+        if len(ids) > 0:
+            where.append("sensor_id IN ({})".format(ids))
+        if len(types) > 0:
+            where.append("type IN ({})".format(",".join(types)) )
+        if from_seconds > 0:
+            where.append("time > {}".format(from_seconds))
 
-    def get_sensors(self, table_name):
-        return self.driver.select(table_name, order_by="sensor_id ASC, time DESC")
+        return self.driver.select(self.TABLE_NAME_SENSORS, cols=["sensor_id", "name", "value", "time"], where = where, order_by=["sensor_id ASC", "time DESC"])

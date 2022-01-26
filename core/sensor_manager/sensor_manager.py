@@ -30,7 +30,7 @@ class SensorManager:
             else:
                 sensors_data.append(data)
 
-        self._db.insert_sensor_data(sensors_data)
+        self._db.insert_sensors(sensors_data)
 
     def get_sensors_by_type(self, type) -> list[Sensor]:
         sensors = []
