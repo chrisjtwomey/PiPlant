@@ -1,3 +1,4 @@
+import threading
 import time
 import logging
 import util.utils as utils
@@ -456,10 +457,17 @@ class DisplayManager:
         #     frame = self.util.get_frame()
         #     self.draw_to_display(frame)
 
-    def draw_to_display(self, frame):
-        self.driver.init()
-        self.driver.clear()
-        self.driver.display(frame)
+    def draw_to_display(self, frame, block_execution=False):
+        def draw():
+            self.driver.init()
+            self.driver.clear()
+            self.driver.display(frame)
+
+        t = threading.Thread(target=draw)
+        t.start()
+        
+        if block_execution:
+            t.join()
 
     def sleep(self):
         if not self.debug:
