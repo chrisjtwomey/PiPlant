@@ -71,7 +71,7 @@ schedule_manager:
       hsbk:
         brightness: 80%
         kelvin: 3500
-    - name: nightlightgit
+    - name: nightlight
       time: "21:00"
       transition: 10m
       hsbk:

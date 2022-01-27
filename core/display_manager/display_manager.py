@@ -266,7 +266,7 @@ class DisplayManager:
         self.log.debug("Drawing environment data")
 
         display_vals = {
-            "temperature": u"\N{DEGREE SIGN}C",
+            "temperature": "\N{DEGREE SIGN}C",
             "brightness": "Lux",
             "humidity": "%",
             "pressure": "hPa",
@@ -307,7 +307,7 @@ class DisplayManager:
 
         icon = "ext_temp.png"
         data_key = "temperature"
-        sensor_unit_txt = u"\N{DEGREE SIGN}C"
+        sensor_unit_txt = "\N{DEGREE SIGN}C"
         x = init_x
         draw_sensor_data(icon, data_key, sensor_unit_txt, x, outside_row_y)
 
@@ -465,7 +465,7 @@ class DisplayManager:
 
         t = threading.Thread(target=draw)
         t.start()
-        
+
         if block_execution:
             t.join()
 

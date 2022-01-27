@@ -2,9 +2,9 @@ from core.sensor_manager.sensor import Sensor
 
 
 class DeviceSensor(Sensor):
-    def __init__(self, **kwargs):
-        self.type = "device"
-        super().__init__()
+    def __init__(self, name):
+        type = "device"
+        super().__init__(name, type)
 
     def get_data(self) -> dict:
         return {

@@ -2,10 +2,11 @@ from core.sensor_manager.sensor import Sensor
 
 
 class Hygrometer(Sensor):
-    def __init__(self, dry_value_percentage=50, **kwargs):
-        self.type = "hygrometer"
+    def __init__(self, name, dry_value_percentage=50):
+        type = "hygrometer"
         self._dry_value_percentage = dry_value_percentage
-        super().__init__()
+
+        super().__init__(name, type)
 
     def get_data(self) -> dict:
         return self.moisture_percentage

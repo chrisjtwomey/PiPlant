@@ -4,12 +4,10 @@ import uuid
 
 
 class Sensor:
-    def __init__(self):
-        if not hasattr(self, "name") or self.name == None:
-            self.name = self.__class__.__name__
-
+    def __init__(self, name, type):
         self.id = uuid.uuid4()
-        self.type = "generic"
+        self.name = name
+        self.type = type
 
         self._data = dict()
         self.log = logging.getLogger(str(self.name))
@@ -34,3 +32,9 @@ class Sensor:
             self.log.exception(e)
 
         return self._data
+
+    def __repr__(self):
+        return self.__str__()
+
+    def __str__(self) -> str:
+        return "Sensor::{}::{}".format(self.type, self.name)

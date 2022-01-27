@@ -9,10 +9,14 @@ class ScheduleManager:
         self.log = logging.getLogger(self.__class__.__name__)
         self.debug = debug
 
+        self._device_groups = device_groups
+
         self._schedules = schedules
         self._active_schedule = None
 
-        self._devicegroups = device_groups
+        self.log.info("Initialized")
+        self.log.debug(utils.repr_device_groups(device_groups))
+        self.log.debug(utils.repr_schedules(schedules))
 
     def on_schedule_change(self, current_schedule):
         hsbk = utils.parse_hsbk_map(current_schedule["hsbk"])
@@ -54,7 +58,7 @@ class ScheduleManager:
             self.log.info(transition_msg)
 
             try:
-                for group in self._devicegroups:
+                for group in self._device_groups:
                     group.set_hsbk(hsbk, transition_seconds)
 
                 self._active_schedule = current_schedule

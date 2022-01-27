@@ -72,3 +72,11 @@ class LifxDeviceGroup(DeviceGroup):
             return hsbk
 
         return self.do(_get_hsbk)
+
+    def __repr__(self) -> str:
+        return ", ".join(
+            [
+                "LIFX::{}::{}".format(device.get_ip_addr(), device.get_mac_addr())
+                for device in self.devices
+            ]
+        )

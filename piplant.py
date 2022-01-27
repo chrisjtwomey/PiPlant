@@ -98,7 +98,6 @@ class PiPlant:
             config, "schedule_manager", "enabled", default="false", dehumanized=True
         )
         if enabled:
-            self.log.info("Initializing lights schedule manager")
             schedules = utils.get_config_prop_by_keys(
                 config, "schedule_manager", "schedules", required=True
             )
@@ -118,7 +117,6 @@ class PiPlant:
         )
 
         if enabled:
-            self.log.info("Initializing light motion trigger manager")
             motion_sensors = utils.get_config_prop_by_keys(
                 config, "motion_trigger_manager", "sensors", required=True
             )

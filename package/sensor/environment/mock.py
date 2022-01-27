@@ -1,12 +1,11 @@
 import random
-from .environment import (
-    EnvironmentAll,
-)
+from .environment import SensorHub
 
 
-class MockEnvironmentAll(EnvironmentAll):
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
+class MockSensorHub(SensorHub):
+    def __init__(self):
+        name = self.__class__.__name__
+        super().__init__(name)
 
     def get_data(self) -> dict:
         return {

@@ -22,8 +22,10 @@ class DeviceStatistics(DeviceSensor):
             min_load_average=self.MIN_LOAD_AVG, max_load_average=self.MAX_LOAD_AVG
         )
 
-        super().__init__()
         self._value = dict()
+        name = self.__class__.__name__
+
+        super().__init__(name)
         self.log.debug("Initialized")
 
     def get_data(self) -> dict:

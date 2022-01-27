@@ -1,8 +1,8 @@
 import smbus
-from ..environment import EnvironmentAll
+from ..environment import SensorHub
 
 
-class SensorHub(EnvironmentAll):
+class DockerPiSensorHub(SensorHub):
     BOARD_STATUS_OK = "OK"
     BOARD_STATUS_ERROR = "ERROR"
     BOARD_STATUS_WARNING = "WARNING"
@@ -27,8 +27,9 @@ class SensorHub(EnvironmentAll):
 
     EMPTY_RECEIVE_BUG = [0x00]
 
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
+    def __init__(self):
+        name = "SensorHub"
+        super().__init__(name)
 
         status, _, _ = self.status()
         if status == self.BOARD_STATUS_ERROR:

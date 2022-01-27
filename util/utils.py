@@ -2,6 +2,8 @@ import re
 import datetime
 import operator
 from functools import reduce
+from reprlib import Repr
+import reprlib
 
 
 def get_by_path(root, items):
@@ -161,3 +163,30 @@ def get_config_prop(config, prop, default=None, required=True, dehumanized=False
         val = dehumanize(val)
 
     return val
+
+
+def repr_schedules(schedules):
+    repr = "Schedules:\n\t{}".format(
+        "\n\t".join(
+            [
+                "{: >10}: {: >10}".format(sched["name"], sched["time"])
+                for sched in schedules
+            ]
+        )
+    )
+    return repr
+
+
+def repr_device_groups(device_groups):
+    repr = "Device groups:\n\t"
+
+    for dg in device_groups:
+        repr += "{}:\n\t\t{}".format(
+            dg.name, "\n\t\t".join([str(dev) for dev in dg.devices])
+        )
+
+    return repr
+
+
+def repr_sensors(sensors):
+    return "Sensors:\n\t{}".format("\n\t".join([str(sensor) for sensor in sensors]))

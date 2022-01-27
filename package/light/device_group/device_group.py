@@ -116,6 +116,12 @@ class DeviceGroup:
     def devices(self) -> list:
         return self.get_devices()
 
+    def __repr__(self) -> str:
+        self.__str__()
+
+    def __str__(self) -> str:
+        return ", ".join([str(device) for device in self.devices])
+
     def check_refresh(self) -> bool:
         return time.time() - self.query_time >= self._query_interval_seconds
 

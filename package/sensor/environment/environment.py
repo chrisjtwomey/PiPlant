@@ -2,9 +2,9 @@ from core.sensor_manager.sensor import Sensor
 
 
 class TemperatureSensor(Sensor):
-    def __init__(self, **kwargs):
-        self.type = "temperature"
-        super().__init__()
+    def __init__(self, name):
+        type = "temperature"
+        super().__init__(name, type)
 
     def get_data(self) -> dict:
         return self.temperature
@@ -20,9 +20,9 @@ class TemperatureSensor(Sensor):
 
 
 class BrightnessSensor(Sensor):
-    def __init__(self, **kwargs):
-        self.type = "brightness"
-        super().__init__()
+    def __init__(self, name):
+        type = "brightness"
+        super().__init__(name, type)
 
     def get_data(self) -> dict:
         return self.brightness
@@ -38,9 +38,9 @@ class BrightnessSensor(Sensor):
 
 
 class HumiditySensor(Sensor):
-    def __init__(self, **kwargs):
-        self.type = "humidity"
-        super().__init__()
+    def __init__(self, name):
+        type = "humidity"
+        super().__init__(name, type)
 
     def get_data(self) -> dict:
         return self.humidity
@@ -56,9 +56,9 @@ class HumiditySensor(Sensor):
 
 
 class PressureSensor(Sensor):
-    def __init__(self, **kwargs):
-        self.type = "pressure"
-        super().__init__()
+    def __init__(self, name):
+        type = "pressure"
+        super().__init__(name, type)
 
     def get_data(self) -> dict:
         return self.pressure
@@ -74,9 +74,9 @@ class PressureSensor(Sensor):
 
 
 class MotionSensor(Sensor):
-    def __init__(self, **kwargs):
-        self.type = "motion"
-        super().__init__()
+    def __init__(self, name):
+        type = "motion"
+        super().__init__(name, type)
 
     def get_data(self) -> dict:
         return self.motion
@@ -91,12 +91,12 @@ class MotionSensor(Sensor):
         )
 
 
-class EnvironmentAll(
+class SensorHub(
     TemperatureSensor, BrightnessSensor, HumiditySensor, PressureSensor, MotionSensor
 ):
-    def __init__(self, **kwargs):
-        self.type = "env_all"
-        super().__init__()
+    def __init__(self, name):
+        type = "sensorhub"
+        Sensor.__init__(self, name, type)
 
     def get_data(self) -> dict:
         return {

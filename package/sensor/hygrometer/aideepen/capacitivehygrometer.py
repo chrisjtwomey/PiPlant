@@ -14,8 +14,7 @@ class CapacitiveHygrometer(Hygrometer):
         dry_value_percentage=0.50,
     ):
         if name is None:
-            self.name = "Hygrometer #" + str(adc_channel)
-        self.name = name
+            name = "Hygrometer #" + str(adc_channel)
 
         self._adc_channel = adc_channel
         self._min_value = min_value
@@ -23,7 +22,7 @@ class CapacitiveHygrometer(Hygrometer):
 
         self._adc = MCP3008(channel=self._adc_channel, max_voltage=self.ADC_MAX_VOLTAGE)
 
-        super().__init__(dry_value_percentage)
+        super().__init__(name, dry_value_percentage)
 
     @property
     def moisture_percentage(self) -> int:

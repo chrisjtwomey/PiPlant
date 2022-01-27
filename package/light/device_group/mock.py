@@ -24,3 +24,6 @@ class MockDeviceGroup(DeviceGroup):
     def set_hsbk(self, hsbk, transition_seconds=0) -> None:
         for device in self.devices:
             device.set_hsbk(hsbk)
+
+    def __repr__(self) -> str:
+        return ", ".join([str(device) for device in self.devices])

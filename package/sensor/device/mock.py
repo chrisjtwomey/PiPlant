@@ -3,8 +3,9 @@ from .device import DeviceSensor
 
 
 class MockDeviceStatistics(DeviceSensor):
-    def __init__(self, **kwargs):
-        super().__init__()
+    def __init__(self):
+        name = self.__class__.__name__
+        super().__init__(name)
 
     @property
     def cpu_temperature(self):
