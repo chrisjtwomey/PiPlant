@@ -12,8 +12,8 @@ from core.sensor_manager.sensor_manager import SensorManager
 from core.display_manager.display_manager import DisplayManager
 from core.database_manager.database_manager import DatabaseManager
 from core.schedule_manager.schedule_manager import ScheduleManager
-from core.motion_trigger_manager.motion_trigger_manager import (
-    MotionTriggerManager,
+from core.motion_lights_manager.motion_lights_manager import (
+    MotionLightsManager,
 )
 
 cwd = os.path.dirname(os.path.realpath(__file__))
@@ -71,7 +71,7 @@ class PiPlant:
         self.display_manager = None
         self.schedule_manager = None
         self.sensor_manager = None
-        self.motion_trigger_manager = None
+        self.motion_lights_manager = None
 
         # dynamically import packages
         self.log.info("Importing packages...")
@@ -85,6 +85,41 @@ class PiPlant:
         except Exception as e:
             raise e
 
+        schedule_manager_enabled = utils.get_config_prop_by_keys(
+            config, "schedule_manager", "enabled", default="false", dehumanized=True
+        )
+        motion_trigger_manager_enabled = utils.get_config_prop_by_keys(
+            config,
+            "motion_lights_manager",
+            "enabled",
+            default="false",
+            dehumanized=True,
+        )
+        display_manager_enabled = utils.get_config_prop_by_keys(
+            config,
+            "display_manager",
+            "enabled",
+            default="false",
+            required=False,
+            dehumanized=True,
+        )
+        self.log.info(
+            "Using {: >25}? {: >3}".format(
+                "schedule manager", "yes" if schedule_manager_enabled else "no"
+            )
+        )
+        self.log.info(
+            "Using {: >25}? {: >3}".format(
+                "motion lights manager",
+                "yes" if motion_trigger_manager_enabled else "no",
+            )
+        )
+        self.log.info(
+            "Using {: >25}? {: >3}".format(
+                "display manager", "yes" if display_manager_enabled else "no"
+            )
+        )
+
         # database manager
         db_driver = utils.get_config_prop_by_keys(config, "database_manager", "driver")
         self.database_manager = DatabaseManager(db_driver)
@@ -94,10 +129,7 @@ class PiPlant:
         self.sensor_manager = SensorManager(sensors, self.database_manager)
 
         # schedule manager
-        enabled = utils.get_config_prop_by_keys(
-            config, "schedule_manager", "enabled", default="false", dehumanized=True
-        )
-        if enabled:
+        if schedule_manager_enabled:
             schedules = utils.get_config_prop_by_keys(
                 config, "schedule_manager", "schedules", required=True
             )
@@ -108,36 +140,28 @@ class PiPlant:
             self.schedule_manager = ScheduleManager(device_groups, schedules)
 
         # motion trigger manager
-        enabled = utils.get_config_prop_by_keys(
-            config,
-            "motion_trigger_manager",
-            "enabled",
-            default="false",
-            dehumanized=True,
-        )
-
-        if enabled:
+        if motion_trigger_manager_enabled:
             motion_sensors = utils.get_config_prop_by_keys(
-                config, "motion_trigger_manager", "sensors", required=True
+                config, "motion_lights_manager", "sensors", required=True
             )
             device_groups = utils.get_config_prop_by_keys(
-                config, "motion_trigger_manager", "device_groups", required=True
+                config, "motion_lights_manager", "device_groups", required=True
             )
             on_motion_trigger_config = utils.get_config_prop_by_keys(
-                config, "motion_trigger_manager", "on_motion_trigger", required=True
+                config, "motion_lights_manager", "on_motion_trigger", required=True
             )
             on_motion_timeout_config = utils.get_config_prop_by_keys(
-                config, "motion_trigger_manager", "on_motion_timeout", required=True
+                config, "motion_lights_manager", "on_motion_timeout", required=True
             )
             timeout_seconds = utils.get_config_prop_by_keys(
                 config,
-                "motion_trigger_manager",
+                "motion_lights_manager",
                 "timeout",
                 required=True,
                 dehumanized=True,
             )
 
-            self.motion_trigger_manager = MotionTriggerManager(
+            self.motion_lights_manager = MotionLightsManager(
                 device_groups,
                 motion_sensors,
                 on_motion_trigger_config,
@@ -146,20 +170,22 @@ class PiPlant:
             )
 
         # display manager
-        display_config = utils.get_config_prop(
-            config, "display_manager", required=False
-        )
-        display_enabled = utils.get_config_prop(
-            display_config, "enabled", default="false", required=False, dehumanized=True
-        )
-
-        if display_enabled:
-            display_driver = utils.get_config_prop(display_config, "driver")
-            refresh_schedules = utils.get_config_prop(
-                display_config, "refresh_schedule", default=["12:00", "18:00"]
+        if display_manager_enabled:
+            display_driver = utils.get_config_prop_by_keys(
+                config, "display_manager", "driver"
             )
-            skip_splash_screen = utils.get_config_prop(
-                display_config, "skip_splash_screen", default="false", dehumanized=True
+            refresh_schedules = utils.get_config_prop_by_keys(
+                config,
+                "display_manager",
+                "refresh_schedule",
+                default=["12:00", "18:00"],
+            )
+            skip_splash_screen = utils.get_config_prop_by_keys(
+                config,
+                "display_manager",
+                "skip_splash_screen",
+                default="false",
+                dehumanized=True,
             )
 
             self.display_manager = DisplayManager(
@@ -174,10 +200,10 @@ class PiPlant:
             schedule.every().minute.do(threaded, self.sensor_manager.run)
 
         if self.schedule_manager is not None:
-            schedule.every(10).minutes.do(threaded, self.schedule_manager.run)
+            schedule.every().minute.do(threaded, self.schedule_manager.run)
 
-        if self.motion_trigger_manager is not None:
-            schedule.every().second.do(threaded, self.motion_trigger_manager.run)
+        if self.motion_lights_manager is not None:
+            schedule.every().second.do(threaded, self.motion_lights_manager.run)
 
         if self.display_manager is not None:
             schedule.every().minute.do(threaded, self.display_manager.run)
@@ -189,8 +215,8 @@ class PiPlant:
         if self.schedule_manager is not None:
             threaded(self.schedule_manager.run)
 
-        if self.motion_trigger_manager is not None:
-            threaded(self.motion_trigger_manager.run)
+        if self.motion_lights_manager is not None:
+            threaded(self.motion_lights_manager.run)
 
         if self.display_manager is not None:
             threaded(self.display_manager.run)

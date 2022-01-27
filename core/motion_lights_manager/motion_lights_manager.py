@@ -5,7 +5,7 @@ import util.utils as utils
 from package.light.device_group.device_group import DeviceGroupError
 
 
-class MotionTriggerManager:
+class MotionLightsManager:
     DEFAULT_TRANSITION_SECONDS = "0s"
 
     def __init__(

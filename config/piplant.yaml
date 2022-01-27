@@ -21,7 +21,7 @@ sensor_manager:
       - hygrometer-adc-3
       - sensorhub
       - rpi-stats
-motion_trigger_manager:
+motion_lights_manager:
   enabled: true
   query_interval: 2s
   timeout: 15m
