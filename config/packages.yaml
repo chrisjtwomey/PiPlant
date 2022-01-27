@@ -33,7 +33,7 @@
       dry_value_percentage: 10
 - name: sensorhub
   package: 
-    module: sensor.environment.dockerpi.dockerpisensorhub
+    module: sensor.environment.dockerpi.sensorhub
 - name: rpi-stats
   package: 
     module: sensor.device.raspberrypi.devicestatistics
