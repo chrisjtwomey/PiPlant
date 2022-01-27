@@ -1,4 +1,5 @@
-import logging 
+import logging
+
 
 class DatabaseDriver:
     def __init__(self):

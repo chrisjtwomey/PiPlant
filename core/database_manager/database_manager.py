@@ -28,7 +28,7 @@ class DatabaseManager:
                     ("time", "INTEGER", "NOT NULL"),
                 ],
             )
-        except Exception as e: 
+        except Exception as e:
             if "already exists" not in str(e):
                 raise e
 
@@ -51,8 +51,13 @@ class DatabaseManager:
         if len(ids) > 0:
             where.append("sensor_id IN ({})".format(ids))
         if len(types) > 0:
-            where.append("type IN ({})".format(",".join(types)) )
+            where.append("type IN ({})".format(",".join(types)))
         if from_seconds > 0:
             where.append("time > {}".format(from_seconds))
 
-        return self.driver.select(self.TABLE_NAME_SENSORS, cols=["sensor_id", "name", "value", "time"], where = where, order_by=["sensor_id ASC", "time DESC"])
+        return self.driver.select(
+            self.TABLE_NAME_SENSORS,
+            cols=["sensor_id", "name", "value", "time"],
+            where=where,
+            order_by=["sensor_id ASC", "time DESC"],
+        )

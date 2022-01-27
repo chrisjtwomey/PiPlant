@@ -30,9 +30,7 @@ class SQLiteDriver(DatabaseDriver):
         self.log.debug(query)
 
         with self._conn as db:
-            db.execute(
-                query
-            )
+            db.execute(query)
 
     def select(self, table_name, cols=[], where=[], order_by=[]):
         formatted_cols = "*"
@@ -43,13 +41,13 @@ class SQLiteDriver(DatabaseDriver):
         if len(where) > 0:
             formatted_where = "WHERE " + " AND ".join(where)
 
-        formatted_order_by = "" 
+        formatted_order_by = ""
         if len(order_by) > 0:
             formatted_order_by = "ORDER BY " + ",".join(order_by)
 
         query = "SELECT {} FROM {} {} {}".format(
-                    formatted_cols, table_name, formatted_where, formatted_order_by
-                )
+            formatted_cols, table_name, formatted_where, formatted_order_by
+        )
         self.log.debug(query)
 
         results = []
@@ -73,9 +71,7 @@ class SQLiteDriver(DatabaseDriver):
         self.log.debug(query)
 
         with self._conn as db:
-            db.execute(
-                query
-            )
+            db.execute(query)
 
     def insert_rows(self, table_name, rows):
         formatted_rows = ",".join([self._format_values(row) for row in rows])
@@ -83,9 +79,7 @@ class SQLiteDriver(DatabaseDriver):
         self.log.debug(query)
 
         with self._conn as db:
-            db.execute(
-                query
-            )
+            db.execute(query)
 
     def _check_connection(self):
         return self._conn is not None

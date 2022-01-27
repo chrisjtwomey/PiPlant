@@ -20,7 +20,7 @@ class MockDatabaseDriver(DatabaseDriver):
 
     def insert_row(self, table_name, row):
         self.data[table_name] = row
-    
+
     def insert_rows(self, table_name, rows):
         new_rows = []
         existing_rows = self.data[table_name]
@@ -29,7 +29,6 @@ class MockDatabaseDriver(DatabaseDriver):
         for row in rows:
             new_rows.append(row)
         self.data[table_name] = new_rows
-        
 
     def __del__(self):
         # no guarantee this closes the connection but it doesn't matter too much

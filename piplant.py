@@ -44,9 +44,11 @@ parser.add_argument(
     help="Flag to enable verbose logging",
 )
 
+
 def threaded(func):
     run_thread = threading.Thread(target=func)
     run_thread.start()
+
 
 class PiPlant:
     def __init__(self, config, packages_config, mock=False, debug=False):
