@@ -24,7 +24,7 @@ sensor_manager:
 motion_trigger_manager:
   enabled: true
   query_interval: 2s
-  timeout: 10s
+  timeout: 15m
   sensors:
     package_refs:
       - sensorhub
