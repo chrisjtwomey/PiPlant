@@ -44,6 +44,9 @@ parser.add_argument(
     help="Flag to enable verbose logging",
 )
 
+def threaded(func):
+    run_thread = threading.Thread(target=func)
+    run_thread.start()
 
 class PiPlant:
     def __init__(self, config, packages_config, mock=False, debug=False):
@@ -167,10 +170,6 @@ class PiPlant:
             )
 
     def schedule(self):
-        def threaded(func):
-            run_thread = threading.Thread(target=func)
-            run_thread.start()
-
         if self.sensor_manager is not None:
             schedule.every().minute.do(threaded, self.sensor_manager.run)
 
@@ -184,7 +183,17 @@ class PiPlant:
             schedule.every().minute.do(threaded, self.display_manager.run)
 
     def run_once(self):
-        schedule.run_all()
+        if self.sensor_manager is not None:
+            threaded(self.sensor_manager.run)
+
+        if self.schedule_manager is not None:
+            threaded(self.schedule_manager.run)
+
+        if self.motion_trigger_manager is not None:
+            threaded(self.motion_trigger_manager.run)
+
+        if self.display_manager is not None:
+            threaded(self.display_manager.run)
 
     def run(self):
         while True:
