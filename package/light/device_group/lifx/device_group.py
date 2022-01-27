@@ -16,9 +16,10 @@ class LifxDeviceGroup(DeviceGroup):
         if power == self.power:
             return
 
-        def _set_power(power, transition_seconds=0):
+        def _set_power(power, transition_seconds):
+            duration = transition_seconds * 1000
             try:
-                self.lifxgroup.set_power(power, duration=transition_seconds)
+                self.lifxgroup.set_power(power, duration)
                 self.refresh()
             except WorkflowException as e:
                 raise DeviceGroupError(e)
@@ -42,16 +43,17 @@ class LifxDeviceGroup(DeviceGroup):
         if hsbk == self.hsbk:
             return
 
-        def _set_hsbk(hsbk, transition_seconds=0):
+        def _set_hsbk(hsbk, transition_seconds):
             brightness = hsbk[2]
+            duration = transition_seconds * 1000
 
             try:
                 if brightness > 0:
-                    self.set_power(True)
+                    self.set_power(True, transition_seconds)
                 else:
-                    self.set_power(False)
+                    self.set_power(False, transition_seconds)
 
-                self.lifxgroup.set_color(hsbk, duration=transition_seconds)
+                self.lifxgroup.set_color(hsbk, duration)
                 self.refresh()
             except WorkflowException as e:
                 raise DeviceGroupError(e)
