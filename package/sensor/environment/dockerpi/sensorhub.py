@@ -37,13 +37,12 @@ class SensorHub(EnvironmentAll):
         self.log.debug("Initialized with status: {}".format(status))
 
     def read(self):
-        self._bus = smbus.SMBus(self.DEVICE_BUS)
+        bus = smbus.SMBus(self.DEVICE_BUS)
 
         data_buffer = [0x00]
         for i in range(self.TEMP_REG, self.HUMAN_DETECT + 1):
-            data_buffer.append(self._bus.read_byte_data(self.DEVICE_ADDR, i))
-        self._bus.close()
-        self._bus = None
+            data_buffer.append(bus.read_byte_data(self.DEVICE_ADDR, i))
+        bus.close()
 
         return data_buffer
 
