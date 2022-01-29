@@ -165,6 +165,10 @@ def get_config_prop(config, prop, default=None, required=True, dehumanized=False
     return val
 
 
+def avg(values: list[int]) -> int:
+    return round(sum(values) / len(values))
+
+
 def repr_schedules(schedules):
     repr = "Schedules:\n\t{}".format(
         "\n\t".join(

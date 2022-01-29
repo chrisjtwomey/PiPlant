@@ -10,6 +10,9 @@ class DatabaseManager:
 
         self.init_db()
 
+        self.log.info("Initialized")
+        self.log.debug("Driver: {}".format(self._driver))
+
     @property
     def driver(self):
         return self._driver
@@ -46,18 +49,22 @@ class DatabaseManager:
 
         self.driver.insert_rows(self.TABLE_NAME_SENSORS, insert_rows)
 
-    def get_sensors(self, *ids, types=[], from_seconds=0):
+    def get_sensors(self, *ids, types=[], from_seconds=-1):
         where = []
+        limit = None
+
         if len(ids) > 0:
             where.append("sensor_id IN ({})".format(ids))
         if len(types) > 0:
-            where.append("type IN ({})".format(",".join(types)))
+            where.append("type IN ('{}')".format(",".join(types)))
         if from_seconds > 0:
             where.append("time > {}".format(from_seconds))
+        elif from_seconds == 0:
+            limit = 1
+        elif from_seconds == -1:
+            where.append("time > 0")
 
-        return self.driver.select(
-            self.TABLE_NAME_SENSORS,
-            cols=["sensor_id", "name", "value", "time"],
-            where=where,
-            order_by=["sensor_id ASC", "time DESC"],
-        )
+        cols = ["sensor_id", "name", "value", "time"]
+        order_by = ["sensor_id", "time DESC"]
+
+        return self.driver.select(self.TABLE_NAME_SENSORS, cols, where, order_by, limit)

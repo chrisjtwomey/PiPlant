@@ -190,6 +190,8 @@ class PiPlant:
 
             self.display_manager = DisplayManager(
                 display_driver,
+                self.sensor_manager,
+                self.database_manager,
                 refresh_schedules,
                 splash_screen=not skip_splash_screen,
                 debug=self.debug,
@@ -222,6 +224,8 @@ class PiPlant:
             threaded(self.display_manager.run)
 
     def run(self):
+        self.run_once()
+        self.schedule()
         while True:
             schedule.run_pending()
             time.sleep(1)
@@ -249,5 +253,4 @@ if __name__ == "__main__":
     packages_config = yaml.safe_load(args.packages)
 
     piplant = PiPlant(config, packages_config, mock=args.mock, debug=args.debug)
-    piplant.schedule()
     piplant.run()

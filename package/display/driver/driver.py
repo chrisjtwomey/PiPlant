@@ -29,3 +29,9 @@ class DisplayDriver:
                 self.__class__.__name__, self.sleep.__name__
             )
         )
+
+    def __repr__(self):
+        return self.__str__()
+
+    def __str__(self):
+        return "DisplayDriver::{}".format(self.__class__.__name__)

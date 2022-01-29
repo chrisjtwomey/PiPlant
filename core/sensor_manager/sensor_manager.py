@@ -1,14 +1,18 @@
+import logging
 from .sensor import Sensor
+from package.sensor.environment.environment import *
+from package.sensor.device.device import DeviceSensor
+from package.sensor.hygrometer.hygrometer import Hygrometer
 
 
 class SensorManager:
-    SENSOR_TYPE_HYGROMETER = "hygrometer"
-    SENSOR_TYPE_ENVIRONMENT = "environment"
-    SENSOR_TYPE_DEVICE = "device"
-
     def __init__(self, sensors, database_manager):
+        self.log = logging.getLogger(self.__class__.__name__)
         self._sensors = sensors
         self._db = database_manager
+
+        self.log.info("Initialized")
+        self.log.debug(self.sensors)
 
     @property
     def sensors(self) -> list[Sensor]:
@@ -32,11 +36,34 @@ class SensorManager:
 
         self._db.insert_sensors(sensors_data)
 
-    def get_sensors_by_type(self, type) -> list[Sensor]:
+    def get_hygrometers(self) -> list[Sensor]:
+        return self._get_sensors_by_class(Hygrometer)
+
+    def get_temperature_sensors(self) -> list[Sensor]:
+        return self._get_sensors_by_class(TemperatureSensor)
+
+    def get_humidity_sensors(self) -> list[Sensor]:
+        return self._get_sensors_by_class(HumiditySensor)
+
+    def get_pressure_sensors(self) -> list[Sensor]:
+        return self._get_sensors_by_class(PressureSensor)
+
+    def get_brightness_sensors(self) -> list[Sensor]:
+        return self._get_sensors_by_class(BrightnessSensor)
+
+    def get_motion_sensors(self) -> list[Sensor]:
+        return self._get_sensors_by_class(MotionSensor)
+
+    def get_device_sensors(self) -> list[Sensor]:
+        return self._get_sensors_by_class(DeviceSensor)
+
+    def _get_sensors_by_class(self, class_) -> list[Sensor]:
         sensors = []
 
         for sensor in self.sensors:
-            if sensor.type != type:
+            if not isinstance(sensor, class_):
                 continue
 
             sensors.append(sensor)
+
+        return sensors

@@ -15,7 +15,7 @@ class DatabaseDriver:
     def create_table(self, table_name, cols):
         raise NotImplementedError()
 
-    def select(self, cols, table_name, where=None, order_by=None):
+    def select(self, table_name, cols, where=[], order_by=[], limit=None):
         raise NotImplementedError()
 
     def insert_row(self, table_name, row):
@@ -27,3 +27,9 @@ class DatabaseDriver:
     def __del__(self):
         # no guarantee this closes the connection but it doesn't matter too much
         self.close()
+
+    def __repr__(self):
+        return self.__str__()
+
+    def __str__(self):
+        return "DatabaseDriver::{}".format(self.__class__.__name__)

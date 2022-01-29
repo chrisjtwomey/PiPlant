@@ -32,7 +32,7 @@ class SQLiteDriver(DatabaseDriver):
         with self._conn as db:
             db.execute(query)
 
-    def select(self, table_name, cols=[], where=[], order_by=[]):
+    def select(self, table_name, cols=[], where=[], order_by=[], limit=None):
         formatted_cols = "*"
         if len(cols) > 0:
             formatted_cols = ",".join(cols)
@@ -45,8 +45,16 @@ class SQLiteDriver(DatabaseDriver):
         if len(order_by) > 0:
             formatted_order_by = "ORDER BY " + ",".join(order_by)
 
-        query = "SELECT {} FROM {} {} {}".format(
-            formatted_cols, table_name, formatted_where, formatted_order_by
+        formatted_limit = ""
+        if limit is not None or limit != 0:
+            formatted_limit = "LIMIT {}".format(limit)
+
+        query = "SELECT {} FROM {} {} {} {}".format(
+            formatted_cols,
+            table_name,
+            formatted_where,
+            formatted_order_by,
+            formatted_limit,
         )
         self.log.debug(query)
 

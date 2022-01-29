@@ -6,14 +6,22 @@ import uuid
 class Sensor:
     def __init__(self, name, type):
         self.id = uuid.uuid4()
-        self.name = name
-        self.type = type
+        self._name = name
+        self._type = type
 
         self._data = dict()
         self.log = logging.getLogger(str(self.name))
 
     def get_data(self) -> dict:
         pass
+
+    @property
+    def name(self):
+        return self._name
+
+    @property
+    def type(self):
+        return self._type
 
     @property
     def data(self):

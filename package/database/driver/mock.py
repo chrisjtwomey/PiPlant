@@ -15,7 +15,7 @@ class MockDatabaseDriver(DatabaseDriver):
     def create_table(self, table_name, cols):
         self.data[table_name] = []
 
-    def select(self, cols, table_name, where=[], order_by=[]):
+    def select(self, table_name, cols, where=[], order_by=[], limit=[]):
         return self.data[table_name]
 
     def insert_row(self, table_name, row):
