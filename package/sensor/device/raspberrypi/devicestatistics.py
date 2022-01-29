@@ -45,39 +45,39 @@ class DeviceStatistics(DeviceSensor):
 
     @property
     def cpu_temperature(self):
-        return self.value["cpu_temperature"]
+        return self.data["value"]["cpu_temperature"]
 
     @property
     def cpu_throttle(self):
-        return self.value["cpu_throttle"]
+        return self.data["value"]["cpu_throttle"]
 
     @property
     def cpu_usage(self):
-        return self.value["cpu_usage"]
+        return self.data["value"]["cpu_usage"]
 
     @property
     def gpu_temperature(self):
-        return self.value["gpu_temperature"]
+        return self.data["value"]["gpu_temperature"]
 
     @property
     def memory_usage(self):
-        return self.value["memory_usage"]
+        return self.data["value"]["memory_usage"]
 
     @property
     def memory_total(self):
-        return self.value["memory_total"]
+        return self.data["value"]["memory_total"]
 
     @property
     def disk_usage(self):
-        return self.value["disk_usage"]
+        return self.data["value"]["disk_usage"]
 
     @property
     def disk_total(self):
-        return self.value["disk_total"]
+        return self.data["value"]["disk_total"]
 
     @property
     def load_avg(self):
-        return self.value["load_avg"]
+        return self.data["value"]["load_avg"]
 
     def _get_gpu_temp(self):
         res = os.popen("/opt/vc/bin/vcgencmd measure_temp").readline()

@@ -69,7 +69,7 @@ class DisplayManager:
 
         if self._current_render_hour != latest_render_hour:
             self.draw_data()
-            self.sleep()
+            # self.sleep()
 
             self._render_time = time.time()
             self._current_render_hour = latest_render_hour
