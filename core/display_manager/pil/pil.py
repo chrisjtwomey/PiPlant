@@ -11,6 +11,10 @@ import scipy.signal
 class PILUtil:
     MODE_1GRAY = "1"
     MODE_4GRAY = "L"
+    GRAY1 = 0xFF  # white
+    GRAY2 = 0xC0  # Close to white
+    GRAY3 = 0x80  # Close to black
+    GRAY4 = 0x00  # black
 
     def __init__(self, width, height):
         self.width = width

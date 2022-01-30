@@ -169,6 +169,10 @@ def avg(values: list[int]) -> int:
     return round(sum(values) / len(values))
 
 
+def percentage_angle_in_range(minAng, maxAng, val_percent):
+    return int(minAng + (maxAng - minAng) * (val_percent / 100))
+
+
 def repr_schedules(schedules):
     repr = "Schedules:\n\t{}".format(
         "\n\t".join(
