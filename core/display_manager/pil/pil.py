@@ -1,18 +1,50 @@
 import os
 import math
+import scipy.signal
 import matplotlib.pyplot as plt
 import matplotlib.dates as md
-import numpy as np
 from matplotlib import font_manager
 from PIL import Image, ImageFont, ImageDraw
-import scipy.signal
+
+
+class XOutOfBoundsError(Exception):
+    def __init__(self, x, max_x):
+        message = (
+            "x-coordinate {} is out-of-bounds. Value must be in range 0-{}".format(
+                x, max_x
+            )
+        )
+        super().__init__(message)
+
+
+class YOutOfBoundsError(Exception):
+    def __init__(self, y, max_y):
+        message = (
+            "y-coordinate {} is out-of-bounds. Value must be in range 0-{}".format(
+                y, max_y
+            )
+        )
+        super().__init__(message)
 
 
 class PILUtil:
     MODE_1GRAY = "1"
     MODE_4GRAY = "L"
+    GRAY1 = 0xFF  # white
+    GRAY2 = 0xC0  # Close to white
+    GRAY3 = 0x80  # Close to black
+    GRAY4 = 0x00  # black
 
-    def __init__(self, width, height):
+    ICON_PLANT = "plant.png"
+    ICON_WATER = "water.png"
+    ICON_DRY = "dry_warning.png"
+    ICON_WARNING = "warning.png"
+    ICON_TEMP = "ext_temp.png"
+    ICON_LUX_HIGH = "sun.png"
+    ICON_LUX_MED = "cloudy.png"
+    ICON_LUX_LOW = "moon.png"
+
+    def __init__(self, width=1, height=1, ignore_errors=False):
         self.width = width
         self.height = height
 
@@ -53,6 +85,8 @@ class PILUtil:
         plt.rcParams["font.family"] = "Roboto"
         plt.rcParams["font.size"] = 5
 
+        self.ignore_errors = ignore_errors
+
     def get_icon_path(self, filename):
         return os.path.join(self.icondir, filename)
 
@@ -70,6 +104,21 @@ class PILUtil:
 
         return frame
 
+    def check_resize(self, width, height):
+        if width != self.width or height != self.height:
+            self.resize(width, height)
+
+    def resize(self, width, height):
+        oldframe = self.get_frame()
+        newframe = Image.new(oldframe.mode, (int(width), int(height)))
+        newframe.paste(oldframe, (0, 0))
+
+        self.set_frame(newframe)
+        self.width = int(width)
+        self.height = int(height)
+
+        return newframe
+
     def get_frame(self):
         frame = None
         if self.frame == None:
@@ -78,6 +127,9 @@ class PILUtil:
         frame = self.frame
 
         return frame
+
+    def set_frame(self, frame):
+        self.frame = frame
 
     def get_last_frame(self):
         if self.last_frame == None:
@@ -94,8 +146,11 @@ class PILUtil:
         return draw
 
     def draw_image(self, filename, x, y, size, bgcolor="#FFF"):
-        sizeW, sizeH = size
-        coords = self.translate(x - sizeW / 2, y + sizeH / 2)
+        imW, imH = size
+        self.check_resize(imW, imH)
+
+        coords = self.round(x, y)
+
         path = self.get_icon_path(filename)
 
         img = Image.open(path).convert("RGBA")
@@ -108,8 +163,10 @@ class PILUtil:
         frame.paste(alpha_composite, coords)
 
     def draw_image_obj(self, img, x, y, size):
-        sizeW, sizeH = size
-        coords = self.translate(x - sizeW / 2, y + sizeH / 2)
+        imW, imH = size
+        self.check_resize(imW, imH)
+
+        coords = self.coords(x, y)
 
         img.thumbnail(size, Image.ANTIALIAS)
 
@@ -117,8 +174,10 @@ class PILUtil:
         frame.paste(img, coords)
 
     def draw_line(self, x1, y1, x2, y2, fill=0, width=1):
-        x1, y1 = self.translate(x1, y1)
-        x2, y2 = self.translate(x2, y2)
+        self.check_resize(x2, y2)
+
+        x1, y1 = self.coords(x1, y1)
+        x2, y2 = self.coords(x2, y2)
 
         draw = self.get_draw()
         draw.line((x1, y1, x2, y2), fill, width)
@@ -126,23 +185,25 @@ class PILUtil:
 
     def draw_text(self, font, text, x, y, fill=0, align="left"):
         draw = self.get_draw()
-        sizeW, sizeH = draw.textsize(text, font)
-        x, y = self.translate(x - sizeW / 2, y + sizeH / 2)
+        x, y = self.coords(x, y)
 
         # draw.text((x, y), text, font=font, fill=fill)
         draw.multiline_text((x, y), text, font=font, fill=fill, align=align)
         del draw
 
     def draw_circle(self, x, y, r, fill=0, outline=0):
-        x, y = self.translate(x, y)
+        self.check_resize(x + r, y + r)
+        x, y = self.coords(x, y)
 
         draw = self.get_draw()
         draw.ellipse([(x - r, y - r), (x + r, y + r)], fill, outline)
         del draw
 
     def draw_rectangle(self, x, y, w, h, fill=0, outline=0, width=1, radius=0):
-        x, y = self.translate(x, y)
-        x1, y1 = x + w, y + h
+        self.check_resize(w, h)
+
+        x, y = self.coords(x, y)
+        x1, y1 = self.coords(x + w, y + h)
 
         draw = self.get_draw()
         if radius > 0:
@@ -158,18 +219,20 @@ class PILUtil:
 
         del draw
 
-    def point_on_circle(self, x, y, r, ang):
+    def point_on_circle(self, cX, cY, cR, ang):
         rads = math.radians(ang)
 
-        pX = x + (r * math.cos(rads))
-        pY = y - (r * math.sin(rads))
+        pX = cX + (cR * math.cos(rads))
+        pY = cY + (cR * math.sin(rads))
 
         pX, pY = self.round(pX, pY)
 
         return (pX, pY)
 
     def draw_arc(self, x, y, r, startAngle, endAngle, fill=0, width=1):
-        x, y = self.translate(x, y)
+        self.check_resize(x + r, y + r)
+
+        x, y = self.coords(x, y)
 
         # get bounding box based on center point and radius
         bbX1 = int(x - r)
@@ -188,7 +251,9 @@ class PILUtil:
     def draw_dashed_arc(
         self, x, y, r, startAngle, endAngle, fill=0, width=1, dash_length=4
     ):
-        x, y = self.translate(x, y)
+        self.check_resize(x + r, y + r)
+
+        x, y = self.coords(x, y)
 
         # get bounding box based on center point and radius
         bbX1 = int(x - r)
@@ -220,6 +285,8 @@ class PILUtil:
         del draw
 
     def draw_linechart(self, data, x, y, w, h, dpi=150):
+        self.check_resize(w, h)
+
         canvas_size = self._calc_fig_size(w, h, 150)
         fig = plt.figure(constrained_layout=True, figsize=canvas_size, dpi=dpi)
 
@@ -246,14 +313,14 @@ class PILUtil:
         )
         self.draw_image_obj(plotimg, x, y, (w, h))
 
-    def textsize(self, text, font):
+    def textsize(self, text, font, padding=0):
         draw = self.get_draw()
-        size = draw.textsize(text, font)
+        size_w, size_h = draw.textsize(text, font)
         del draw
-        return size
+        return (size_w + padding, size_h + padding)
 
-    def translate(self, x, y):
-        return self.round(x, self.height - y)
+    def coords(self, x, y):
+        return self.round(x, y)
 
     def round(self, x, y):
         return int(x), int(y)

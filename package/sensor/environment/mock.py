@@ -22,7 +22,7 @@ class MockSensorHub(SensorHub):
 
     @property
     def brightness(self) -> int:
-        return random.randrange(0, 100)
+        return random.randrange(0, 1800)
 
     @property
     def humidity(self) -> int:

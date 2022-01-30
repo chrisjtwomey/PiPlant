@@ -1,9 +1,9 @@
 import re
 import datetime
 import operator
+import textwrap
 from functools import reduce
-from reprlib import Repr
-import reprlib
+from string import ascii_letters
 
 
 def get_by_path(root, items):
@@ -169,6 +169,10 @@ def avg(values: list[int]) -> int:
     return round(sum(values) / len(values))
 
 
+def percentage_angle_in_range(minAng, maxAng, val_percent):
+    return int(minAng + (maxAng - minAng) * (val_percent / 100))
+
+
 def repr_schedules(schedules):
     repr = "Schedules:\n\t{}".format(
         "\n\t".join(
@@ -194,3 +198,18 @@ def repr_device_groups(device_groups):
 
 def repr_sensors(sensors):
     return "Sensors:\n\t{}".format("\n\t".join([str(sensor) for sensor in sensors]))
+
+
+def wraptext(text, font, framewidth=70):
+    avg_char_width = sum(font.getsize(char)[0] for char in ascii_letters) / len(
+        ascii_letters
+    )
+    max_char_count = int(framewidth / avg_char_width)
+
+    wrapped_text = textwrap.fill(text, width=max_char_count)
+    text_width, _ = font.getsize(wrapped_text)
+
+    if text_width >= framewidth:
+        wrapped_text = "\n".join([x[0].upper() for x in text.split(" ")])
+
+    return wrapped_text

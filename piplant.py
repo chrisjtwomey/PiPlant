@@ -253,4 +253,4 @@ if __name__ == "__main__":
     packages_config = yaml.safe_load(args.packages)
 
     piplant = PiPlant(config, packages_config, mock=args.mock, debug=args.debug)
-    piplant.run()
+    piplant.run_once()

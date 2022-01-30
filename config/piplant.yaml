@@ -12,7 +12,7 @@ display_manager:
     - "15:00"
     - "18:00"
     - "21:00"
-  skip_splash_screen: false
+  skip_splash_screen: true
 sensor_manager:
   sensors:
     package_refs:
@@ -22,7 +22,7 @@ sensor_manager:
       - sensorhub
       - rpi-stats
 motion_lights_manager:
-  enabled: true
+  enabled: false
   query_interval: 2s
   timeout: 15m
   sensors:
@@ -42,7 +42,7 @@ motion_lights_manager:
       brightness: 0%
       kelvin: 3000
 schedule_manager:
-  enabled: true
+  enabled: false
   query_interval: 2m
   device_groups:
     package_refs:
