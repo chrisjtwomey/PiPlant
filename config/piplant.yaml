@@ -1,5 +1,6 @@
 ---
 database_manager:
+  enabled: true
   driver:
     package_ref: sqlite-driver
 display_manager:
@@ -14,6 +15,7 @@ display_manager:
     - "21:00"
   skip_splash_screen: false
 sensor_manager:
+  enabled: true
   sensors:
     package_refs:
       - hygrometer-adc-1

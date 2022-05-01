@@ -85,6 +85,12 @@ class PiPlant:
         except Exception as e:
             raise e
 
+        database_manager_enabled = utils.get_config_prop_by_keys(
+            config, "database_manager", "enabled", default="false", dehumanized=True
+        )
+        sensor_manager_enabled = utils.get_config_prop_by_keys(
+            config, "sensor_manager", "enabled", default="false", dehumanized=True
+        )
         schedule_manager_enabled = utils.get_config_prop_by_keys(
             config, "schedule_manager", "enabled", default="false", dehumanized=True
         )
@@ -105,6 +111,16 @@ class PiPlant:
         )
         self.log.info(
             "Using {: >25}? {: >3}".format(
+                "database manager", "yes" if database_manager_enabled else "no"
+            )
+        )
+        self.log.info(
+            "Using {: >25}? {: >3}".format(
+                "sensor manager", "yes" if sensor_manager_enabled else "no"
+            )
+        )
+        self.log.info(
+            "Using {: >25}? {: >3}".format(
                 "schedule manager", "yes" if schedule_manager_enabled else "no"
             )
         )
@@ -121,12 +137,16 @@ class PiPlant:
         )
 
         # database manager
-        db_driver = utils.get_config_prop_by_keys(config, "database_manager", "driver")
-        self.database_manager = DatabaseManager(db_driver)
+        if database_manager_enabled:
+            db_driver = utils.get_config_prop_by_keys(
+                config, "database_manager", "driver"
+            )
+            self.database_manager = DatabaseManager(db_driver)
 
         # sensor manager
-        sensors = utils.get_config_prop_by_keys(config, "sensor_manager", "sensors")
-        self.sensor_manager = SensorManager(sensors, self.database_manager)
+        if sensor_manager_enabled:
+            sensors = utils.get_config_prop_by_keys(config, "sensor_manager", "sensors")
+            self.sensor_manager = SensorManager(sensors, self.database_manager)
 
         # schedule manager
         if schedule_manager_enabled:
