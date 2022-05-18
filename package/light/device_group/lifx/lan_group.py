@@ -1,8 +1,9 @@
+import time
 from lifxlan import Group, WorkflowException
 from ..device_group import DeviceGroup, DeviceGroupError
 
 
-class LifxDeviceGroup(DeviceGroup):
+class LifxLANGroup(DeviceGroup):
     def __init__(
         self, name, devices, query_interval="2m", retry_interval="2s", max_retries=5
     ):
@@ -72,6 +73,17 @@ class LifxDeviceGroup(DeviceGroup):
             return hsbk
 
         return self.do(_get_hsbk)
+
+    def refresh(self) -> None:
+        self._power = self.get_power()
+        self._hsbk = self.get_hsbk()
+        self._query_time = time.time()
+
+        self.log.debug(
+            "refreshed device states:\n\tpower: {}\n\thsbk: {}".format(
+                self._power, self._hsbk
+            )
+        )
 
     def __repr__(self) -> str:
         return ", ".join(

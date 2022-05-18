@@ -72,8 +72,13 @@ class MotionLightsManager:
             return
 
         self.log.info("motion triggered - activating light groups")
-        self.on_motion(hsbk, transition_seconds=transition_seconds)
-        self._current_hsbk = hsbk
+        try:
+            self.on_motion(hsbk, transition_seconds=transition_seconds)
+            self._current_hsbk = hsbk
+        except DeviceGroupError as dge:
+            self.log.error(dge)
+        except Exception as e:
+            raise e
 
     def on_motion_timeout(self, hsbk, transition_seconds=0):
         if self._current_hsbk == hsbk:
@@ -83,8 +88,10 @@ class MotionLightsManager:
         try:
             self.on_motion(hsbk, transition_seconds=transition_seconds)
             self._current_hsbk = hsbk
-        except DeviceGroupError as e:
-            self.log.error(e)
+        except DeviceGroupError as dge:
+            self.log.error(dge)
+        except Exception as e:
+            raise e
 
     def run(self):
         motion_detection = self.is_motion_detected()

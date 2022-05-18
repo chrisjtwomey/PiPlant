@@ -37,12 +37,12 @@ motion_lights_manager:
     transition: 1s
     hsbk:
       brightness: 35%
-      kelvin: 3000
+      kelvin: 3500
   on_motion_timeout:
     transition: 1s
     hsbk:
       brightness: 0%
-      kelvin: 3000
+      kelvin: 3500
 schedule_manager:
   enabled: true
   query_interval: 2m

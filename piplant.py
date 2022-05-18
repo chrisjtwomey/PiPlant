@@ -225,7 +225,7 @@ class PiPlant:
             schedule.every().minute.do(threaded, self.schedule_manager.run)
 
         if self.motion_lights_manager is not None:
-            schedule.every().second.do(threaded, self.motion_lights_manager.run)
+            schedule.every(5).seconds.do(threaded, self.motion_lights_manager.run)
 
         if self.display_manager is not None:
             schedule.every().minute.do(threaded, self.display_manager.run)

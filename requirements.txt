@@ -12,5 +12,6 @@ numpy>=1.21.2
 lifxlan>=1.2.7
 psutil>=5.5.1
 schedule>=1.1.0
+requests>=2.25.1
 git+https://github.com/chrisjtwomey/rpi-epd3in7.git@master#egg=rpi_epd3in7
 git+https://github.com/nicmcd/vcgencmd.git

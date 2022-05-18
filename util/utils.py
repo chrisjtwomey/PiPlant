@@ -5,6 +5,15 @@ from functools import reduce
 from reprlib import Repr
 import reprlib
 
+HSBK_HUE_MIN_VALUE = 0
+HSBK_HUE_MAX_VALUE = 360
+HSBK_KELVIN_MIN_VALUE = 2500
+HSBK_KELVIN_MAX_VALUE = 9000
+HSBK_FLT_MIN_VALUE = 0.0
+HSBK_FLT_MAX_VALUE = 1.0
+HSBK_FLT_PRECISION = 2
+HSBK_FLT_SCALE = 0.01
+
 
 def get_by_path(root, items):
     """Access a nested object in root by item sequence."""
@@ -19,7 +28,6 @@ def set_by_path(root, items, value):
 def del_by_path(root, items):
     """Delete a key-value in a nested object in root by item sequence."""
     del get_by_path(root, items[:-1])[items[-1]]
-
 
 def dehumanize(human_str):
     # ensure str
@@ -93,22 +101,58 @@ def hour_to_datetime(hour_str):
 
     return dt
 
+def parse_hsbk_map(hsbk_map):
+    parsed_hsbk = {}
 
-def parse_hsbk_map(hsbk_map, max_value=65535):
-    hue = hsbk_map["hue"] if "hue" in hsbk_map else 0
-    sat = hsbk_map["saturation"] if "saturation" in hsbk_map else 0
-    brightness_raw = hsbk_map["brightness"] if "brightness" in hsbk_map else "0"
-    kelvin = hsbk_map["kelvin"] if "kelvin" in hsbk_map else 0
+    if "hue" in hsbk_map:
+        hue = hsbk_map["hue"]
 
-    if "%" in brightness_raw:
-        brightness = int(max_value / 100 * int(brightness_raw.split("%")[0]))
+        if not isinstance(hue, int):
+            raise ValueError("HSBK hue {} is not an integer".format(hue))
+
+        if not (HSBK_HUE_MIN_VALUE <= hue <= HSBK_HUE_MAX_VALUE):
+            raise ValueError("HSBK hue value {} not in range ({} - {})".format(hue, HSBK_HUE_MIN_VALUE, HSBK_HUE_MAX_VALUE))
+        
+        parsed_hsbk["hue"] = hue
+    
+    if "saturation" in hsbk_map:
+        sat = hsbk_map["saturation"]
+
+        if isinstance(sat, str):
+            sat = percentage_string_as_float(sat, scale=HSBK_FLT_SCALE, precision=HSBK_FLT_PRECISION)
+
+        if not (HSBK_FLT_MIN_VALUE <= sat <= HSBK_FLT_MAX_VALUE):
+            raise ValueError("HSBK saturation value {} not in range ({} - {})".format(sat, HSBK_FLT_MIN_VALUE, HSBK_FLT_MAX_VALUE))
+
+    if "brightness" in hsbk_map:
+        brightness = hsbk_map["brightness"]
+
+        if isinstance(brightness, str):
+            brightness = percentage_string_as_float(brightness, scale=HSBK_FLT_SCALE, precision=HSBK_FLT_PRECISION)
+
+        if not (HSBK_FLT_MIN_VALUE <= brightness <= HSBK_FLT_MAX_VALUE):
+            raise ValueError("HSBK brightness value {} not in range ({} - {})".format(brightness, HSBK_FLT_MIN_VALUE, HSBK_FLT_MAX_VALUE))
+
+        parsed_hsbk["brightness"] = brightness
+
+    if "kelvin" in hsbk_map:
+        kelvin = hsbk_map["kelvin"]
+
+        if not isinstance(kelvin, int):
+            raise ValueError("HSBK kelvin {} is not an integer".format(kelvin))
+
+        if not (HSBK_KELVIN_MIN_VALUE <= kelvin <= HSBK_KELVIN_MAX_VALUE):
+            raise ValueError("HSBK kelvin value {} not in range ({} - {})".format(kelvin, HSBK_KELVIN_MIN_VALUE, HSBK_KELVIN_MAX_VALUE))
+
+        parsed_hsbk["kelvin"] = int(kelvin)
+
+    return parsed_hsbk
+
+def percentage_string_as_float(val, scale=0.01, precision=2):
+    if "%" in val:
+        return round(int(val.replace("%", "")) * scale, precision)
     else:
-        brightness = int(brightness_raw)
-
-    hsbk = [hue, sat, brightness, kelvin]
-
-    return hsbk
-
+        return round(int(val) * scale, precision)
 
 def find_paths_to_key(d, *target_keys):
     def traverse(dic, path=None):
@@ -172,6 +216,8 @@ def avg(values: list[int]) -> int:
 def percentage_angle_in_range(minAng, maxAng, val_percent):
     return int(minAng + (maxAng - minAng) * (val_percent / 100))
 
+def normalize_to_range(x, old_r_min, old_r_max, new_r_min, new_r_max, decimals=2):
+    return round(((x - old_r_min) / (old_r_max - old_r_min)) * (new_r_max - new_r_min) + new_r_min, decimals)
 
 def repr_schedules(schedules):
     repr = "Schedules:\n\t{}".format(

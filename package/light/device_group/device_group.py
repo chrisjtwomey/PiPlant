@@ -21,7 +21,7 @@ class DeviceGroup:
         self._max_retries = max_retries
 
         self._power = [False] * len(devices)
-        self._hsbk = [[0, 0, 0, 0]] * len(devices)
+        self._hsbk = [{}] * len(devices)
         self._query_time = 0
 
         self.log = logging.getLogger("{}.{}".format(self.__class__.__name__, self.name))
@@ -93,7 +93,7 @@ class DeviceGroup:
         return self._group_name
 
     @property
-    def query_time(self) -> int:
+    def query_time(self) -> float:
         return self._query_time
 
     @property
